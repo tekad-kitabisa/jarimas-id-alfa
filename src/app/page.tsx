@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,592 +21,450 @@ import {
   ShieldCheck,
   ArrowRight,
   Sparkles,
-  ChevronRight,
   CheckCircle2,
   Building2,
   Lock,
-  Compass,
   Layers,
-  Menu,
-  X,
+  TrendingUp,
+  Activity,
+  BarChart3,
+  Sun,
+  Moon,
+  Compass,
 } from "lucide-react"
+import { useTheme } from "next-themes"
 
-export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
-  const [selectedRole, setSelectedRole] = React.useState<"PENDUDUK" | "KETUA_RT" | "POSYANDU" | "PAUD">("PENDUDUK")
+export default function BentoLandingPage() {
+  const { theme, setTheme } = useTheme()
+  const [activeRole, setActiveRole] = React.useState<"PENDUDUK" | "KETUA_RT" | "POSYANDU" | "PAUD">("PENDUDUK")
 
-  const rolesData = {
+  const roleDetails = {
     PENDUDUK: {
       title: "Warga & Penduduk",
       badge: "Akses Publik",
-      desc: "Akses informasi kegiatan lingkungan, surat pengantar digital ke RT/RW, forum warga terverifikasi, dan pasar jual-beli antar tetangga.",
-      features: ["Surat Pengantar RT/RW Digital", "Lini Masa Kabar Warga Terverifikasi", "Jarimas Market (UMKM Warga)", "Jadwal Posyandu & Kegiatan Lingkungan"],
+      desc: "Layanan surat pengantar RT/RW digital, kabar warga terverifikasi, pasar tetangga, dan jadwal kegiatan lingkungan.",
+      tagColor: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
     },
     KETUA_RT: {
-      title: "Ketua RT & Pengurus RW",
+      title: "Ketua RT / Pengurus RW",
       badge: "Tata Kelola Wilayah",
-      desc: "Kelola data kependudukan warga secara real-time, validasi pengajuan surat pengantar secara instan, dan siarkan pengumuman darurat resmi.",
-      features: ["Persetujuan Surat Pengantar 1-Klik", "Master Data Kependudukan & KK", "Siaran Pengumuman Wilayah Resmi", "Rekapitulasi Iuran & Kas RT/RW"],
+      desc: "Validasi surat pengantar instan, pengelolaan data kependudukan terpadu, dan pengumuman resmi lingkungan.",
+      tagColor: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
     },
     POSYANDU: {
       title: "Kader Posyandu",
-      badge: "Kesehatan Warga",
-      desc: "Pencatatan rekam tumbuh kembang balita, jadwal imunisasi, dan pemantauan gizi ibu hamil yang terintegrasi langsung dengan data kependudukan warga.",
-      features: ["Buku KIA & KMS Digital", "Notifikasi Jadwal Penimbangan & Imunisasi", "Deteksi Dini & Pencegahan Stunting", "Laporan Statistik Kesehatan Balita"],
+      badge: "Kesehatan Keluarga",
+      desc: "Pencatatan tumbuh kembang balita, buku KIA/KMS digital, dan jadwal imunisasi otomatis terhubung ke data warga.",
+      tagColor: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
     },
     PAUD: {
-      title: "Pengelola & Guru PAUD",
+      title: "Pendidik PAUD-PNF",
       badge: "Pendidikan Komunitas",
-      desc: "Koordinasi kegiatan belajar mengajar anak usia dini di lingkungan komunitas, rekap absensi, dan komunikasi interaktif dengan orang tua murid.",
-      features: ["Buku Penghubung Orang Tua Digital", "Jadwal Pembelajaran & Portofolio Anak", "Pengumuman Kegiatan Belajar PAUD", "Integrasi Data Anak Usia Dini"],
+      desc: "Buku penghubung orang tua digital, agenda kegiatan belajar, dan pemantauan perkembangan anak usia dini.",
+      tagColor: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
     },
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-indigo-900 via-purple-800 to-pink-700 text-white relative overflow-hidden selection:bg-pink-500 selection:text-white">
-      {/* Ambient Lighting Orbs for Deep Glassmorphism Effect */}
-      <div className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-pink-500/25 blur-[130px] pointer-events-none" />
-      <div className="absolute top-[35%] -right-32 w-[650px] h-[650px] rounded-full bg-indigo-500/30 blur-[150px] pointer-events-none" />
-      <div className="absolute -bottom-40 left-[20%] w-[600px] h-[600px] rounded-full bg-purple-500/25 blur-[140px] pointer-events-none" />
-
-      {/* Floating Glassmorphism Header */}
-      <div className="sticky top-4 z-50 max-w-7xl mx-auto px-4 sm:px-6">
-        <header className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 sm:px-6 py-3 flex items-center justify-between shadow-2xl shadow-black/20">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="bg-gradient-to-br from-pink-400 to-purple-600 text-white h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md shadow-pink-500/30 group-hover:scale-105 transition-transform">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="bg-primary text-primary-foreground h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm shadow-sm">
               JM
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-base tracking-tight leading-none text-white drop-shadow-sm">
-                JARIMAS<span className="text-pink-300 font-normal">.ID</span>
+              <span className="font-extrabold text-base tracking-tight leading-none">
+                JARIMAS<span className="text-primary font-normal">.ID</span>
               </span>
-              <span className="text-[9px] text-white/70 tracking-wider uppercase font-semibold">
+              <span className="text-[10px] text-muted-foreground tracking-wider uppercase font-semibold">
                 Ekosistem Warga
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5 lg:gap-3 text-xs font-medium">
-            <a
-              href="#fitur"
-              className="px-3.5 py-1.5 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all duration-200"
-            >
-              Fitur Unggulan
-            </a>
-            <a
-              href="#multi-role"
-              className="px-3.5 py-1.5 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all duration-200"
-            >
-              Multi-Role
-            </a>
-            <a
-              href="#keamanan"
-              className="px-3.5 py-1.5 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all duration-200"
-            >
-              Keamanan Data
-            </a>
+          {/* Quick Nav Links */}
+          <nav className="hidden md:flex items-center gap-2 text-xs font-medium">
             <Link
               href="/feed"
-              className="px-3.5 py-1.5 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all duration-200 flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1.5"
             >
-              <Compass className="h-3.5 w-3.5 text-pink-300" />
-              Jelajahi Feed
+              <Compass className="h-3.5 w-3.5 text-primary" />
+              Linimasa Kabar Warga
             </Link>
+            <Badge variant="outline" className="text-[11px] font-normal gap-1 py-1">
+              <Building2 className="h-3 w-3 text-muted-foreground" />
+              Wilayah: Kel. Pekauman, Kota Tegal
+            </Badge>
           </nav>
 
-          {/* Action Buttons */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-xl"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title="Toggle Mode Terang/Gelap"
+            >
+              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle Theme</span>
+            </Button>
             <Link href="/login">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full px-4 text-xs font-medium"
-              >
-                Masuk Akun
+              <Button variant="outline" size="sm" className="text-xs">
+                Masuk
               </Button>
             </Link>
             <Link href="/register">
-              <Button
-                variant="glow"
-                size="sm"
-                className="rounded-full px-4 text-xs font-semibold"
-              >
+              <Button size="sm" className="text-xs font-semibold">
                 Daftar Warga
               </Button>
             </Link>
           </div>
-
-          {/* Mobile Menu Trigger */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="sm:hidden p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </header>
-
-        {/* Mobile Dropdown Panel */}
-        {mobileMenuOpen && (
-          <div className="sm:hidden mt-2 p-4 bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl space-y-3 shadow-2xl animate-in slide-in-from-top-2 duration-200">
-            <div className="flex flex-col gap-2 text-sm font-medium">
-              <a
-                href="#fitur"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-lg text-white/90 hover:bg-white/10"
-              >
-                Fitur Unggulan
-              </a>
-              <a
-                href="#multi-role"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-lg text-white/90 hover:bg-white/10"
-              >
-                Multi-Role Sistem
-              </a>
-              <a
-                href="#keamanan"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-lg text-white/90 hover:bg-white/10"
-              >
-                Keamanan Data
-              </a>
-              <Link
-                href="/feed"
-                className="px-3 py-2 rounded-lg text-pink-200 hover:bg-white/10 flex items-center gap-2"
-              >
-                <Compass className="h-4 w-4" /> Masuk ke Feed Warga
-              </Link>
-            </div>
-            <div className="pt-3 border-t border-white/15 flex flex-col gap-2">
-              <Link href="/login" className="w-full">
-                <Button variant="outline" className="w-full text-xs">
-                  Masuk Akun
-                </Button>
-              </Link>
-              <Link href="/register" className="w-full">
-                <Button variant="glow" className="w-full text-xs">
-                  Daftar Warga Baru
-                </Button>
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Hero Section */}
-      <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 max-w-6xl mx-auto px-4 sm:px-6 text-center">
-        {/* Glow Pill Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/25 shadow-lg shadow-black/10 mb-8 animate-in fade-in-50 duration-700">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <Sparkles className="h-3.5 w-3.5 text-pink-300" />
-          <span className="text-xs font-semibold text-white/90 tracking-wide">
-            Platform Ekosistem Digital Komunitas Warga & Pelayanan Publik
-          </span>
         </div>
+      </header>
 
-        {/* Hero Title */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] max-w-4xl mx-auto text-white drop-shadow-md">
-          Harmoni Digital Komunitas Warga & Pelayanan Publik{" "}
-          <span className="bg-gradient-to-r from-pink-300 via-purple-200 to-indigo-200 bg-clip-text text-transparent underline decoration-pink-400/40 decoration-wavy decoration-2">
-            Indonesia
-          </span>
-        </h1>
-
-        {/* Hero Subtitle */}
-        <p className="mt-6 text-base sm:text-lg md:text-xl text-white/85 max-w-2xl mx-auto font-normal leading-relaxed drop-shadow-sm">
-          Menghubungkan warga tetangga, pengurus RT/RW, kader Posyandu, hingga pendidik PAUD dalam satu platform modern yang aman, transparan, dan terverifikasi.
-        </p>
-
-        {/* Hero CTA Buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/register" className="w-full sm:w-auto">
-            <Button
-              variant="glow"
-              size="lg"
-              className="w-full sm:w-auto px-8 gap-2.5 text-sm sm:text-base font-bold shadow-2xl"
-            >
-              Daftar Sebagai Warga
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/login" className="w-full sm:w-auto">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto px-7 gap-2 text-sm sm:text-base font-semibold"
-            >
-              Masuk ke Portal
-              <ChevronRight className="h-4 w-4 opacity-70" />
-            </Button>
-          </Link>
-        </div>
-
-        {/* Quick Highlights Chips */}
-        <div className="mt-12 pt-8 border-t border-white/15 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto text-left">
-          <div className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-2.5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-300 shrink-0" />
-            <span className="text-xs font-semibold text-white/90">Data Warga Terverifikasi</span>
+      {/* Main Bento Grid Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10">
+        {/* Bento Grid Header Title */}
+        <div className="mb-8 space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
+            <Sparkles className="h-3.5 w-3.5" />
+            Platform Ekosistem Digital Warga & Pelayanan Publik
           </div>
-          <div className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-2.5">
-            <Layers className="h-4 w-4 text-pink-300 shrink-0" />
-            <span className="text-xs font-semibold text-white/90">Multi-Role RT, RW & Posyandu</span>
-          </div>
-          <div className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-2.5">
-            <Building2 className="h-4 w-4 text-purple-300 shrink-0" />
-            <span className="text-xs font-semibold text-white/90">Terintegrasi Wilayah Lokal</span>
-          </div>
-          <div className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-2.5">
-            <Lock className="h-4 w-4 text-blue-300 shrink-0" />
-            <span className="text-xs font-semibold text-white/90">Privasi & Keamanan Tinggi</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Showcase Grid (Glass Cards) */}
-      <section id="fitur" className="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 relative">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <Badge variant="outline" className="text-xs px-3 py-1 mb-3 border-white/30 bg-white/10 text-white">
-            Fitur Utama Ekosistem
-          </Badge>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Solusi Menyeluruh untuk Lingkungan Warga yang Modern
-          </h2>
-          <p className="mt-3 text-sm text-white/80">
-            Seluruh kebutuhan administratif, sosial, dan ekonomi lingkungan terangkum dalam satu wadah digital.
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+            Harmoni Digital Komunitas Warga Indonesia
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
+            Satu sistem terpadu untuk administrasi RT/RW, kabar warga terverifikasi, layanan Posyandu, PAUD, serta ekonomi mandiri komunitas.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card 1: Layanan RT/RW */}
-          <Card className="hover:scale-[1.02] transition-all duration-300">
-            <CardHeader>
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-500/40 to-indigo-600/40 border border-white/20 flex items-center justify-center text-blue-200 mb-2 shadow-inner">
-                <FileText className="h-5 w-5" />
+        {/* Bento Grid Container (4 Columns) */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-5">
+          {/* ========================================================= */}
+          {/* BENTO BOX 1: Hero / Profil Utama (Col Span 2, Row Span 2) */}
+          {/* ========================================================= */}
+          <Card className="md:col-span-2 md:row-span-2 flex flex-col justify-between bg-gradient-to-br from-card via-card to-primary/[0.03] border-primary/20">
+            <CardHeader className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Badge variant="secondary" className="text-xs font-semibold px-2.5 py-0.5">
+                  Ekosistem Unggulan
+                </Badge>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Live System
+                </div>
               </div>
-              <CardTitle>Administrasi RT/RW Digital</CardTitle>
-              <CardDescription>
-                Pengajuan dan penerbitan surat pengantar, perizinan domisili, dan pendataan sensus warga yang transparan dan bebas birokrasi manual.
+              <CardTitle className="text-xl sm:text-2xl md:text-3xl font-extrabold leading-tight">
+                Integrasi Layanan Warga yang Cepat, Transparan, dan Tanpa Ribet
+              </CardTitle>
+              <CardDescription className="text-sm">
+                JARIMAS-ID menjembatani interaksi antara warga dan pengurus lingkungan. Dapatkan surat pengantar RT/RW dalam hitungan menit, akses info resmi tanpa hoaks, dan pantau kesehatan keluarga langsung dari smartphone.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5 text-xs text-white/85">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-blue-300" />
-                  Surat pengantar instan bertanda tangan digital
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-blue-300" />
-                  Pencatatan kas dan iuran warga transparan
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
 
-          {/* Card 2: Kabar Warga */}
-          <Card className="hover:scale-[1.02] transition-all duration-300">
-            <CardHeader>
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-pink-500/40 to-purple-600/40 border border-white/20 flex items-center justify-center text-pink-200 mb-2 shadow-inner">
-                <Users className="h-5 w-5" />
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/60 flex items-start gap-2.5">
+                  <FileText className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-foreground">Surat RT/RW Digital</div>
+                    <div className="text-[11px] text-muted-foreground">Pengajuan online bebas antrean</div>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/60 flex items-start gap-2.5">
+                  <Users className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-foreground">Kabar Terverifikasi</div>
+                    <div className="text-[11px] text-muted-foreground">Info tervalidasi pengurus RT</div>
+                  </div>
+                </div>
               </div>
-              <CardTitle>Kabar Warga & Komunitas</CardTitle>
-              <CardDescription>
-                Lini masa sosial lingkungan yang terverifikasi. Pengumuman kegiatan gotong royong, berita duka, atau agenda resmi tanpa hoaks.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5 text-xs text-white/85">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-pink-300" />
-                  Informasi resmi tervalidasi oleh pengurus wilayah
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-pink-300" />
-                  Forum diskusi dan grup minat antar-warga
-                </li>
-              </ul>
             </CardContent>
-          </Card>
 
-          {/* Card 3: Jarimas Market */}
-          <Card className="hover:scale-[1.02] transition-all duration-300">
-            <CardHeader>
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500/40 to-orange-600/40 border border-white/20 flex items-center justify-center text-amber-200 mb-2 shadow-inner">
-                <ShoppingBag className="h-5 w-5" />
+            <CardFooter className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Link href="/register" className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto gap-2 font-semibold text-xs h-10">
+                    Daftar Akun Warga
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+                <Link href="/feed" className="w-full sm:w-auto">
+                  <Button variant="outline" className="w-full sm:w-auto text-xs h-10">
+                    Jelajahi Feed
+                  </Button>
+                </Link>
               </div>
-              <CardTitle>Jarimas Market (Pasar Warga)</CardTitle>
-              <CardDescription>
-                Pasar komunitas lokal untuk memberdayakan UMKM tetangga. Beli kebutuhan harian, kuliner, dan jasa langsung dari warga sekitar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5 text-xs text-white/85">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-amber-300" />
-                  Etalase produk UMKM dan jasa warga terdekat
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-amber-300" />
-                  Pengiriman cepat antar-tetangga tanpa ongkir mahal
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Card 4: Posyandu Digital */}
-          <Card className="hover:scale-[1.02] transition-all duration-300">
-            <CardHeader>
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-rose-500/40 to-red-600/40 border border-white/20 flex items-center justify-center text-rose-200 mb-2 shadow-inner">
-                <HeartPulse className="h-5 w-5" />
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                Data Aman & Terlindungi
               </div>
-              <CardTitle>Posyandu & Kesehatan Ibu-Anak</CardTitle>
-              <CardDescription>
-                Buku kesehatan ibu dan anak (KIA) digital. Jadwal penimbangan rutin, imunisasi, dan pemantauan gizi terintegrasi data kependudukan.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5 text-xs text-white/85">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-rose-300" />
-                  Grafik rekam tumbuh kembang balita otomatis
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-rose-300" />
-                  Pengingat otomatis jadwal imunisasi berkala
-                </li>
-              </ul>
-            </CardContent>
+            </CardFooter>
           </Card>
 
-          {/* Card 5: PAUD-PNF */}
-          <Card className="hover:scale-[1.02] transition-all duration-300">
-            <CardHeader>
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-teal-500/40 to-emerald-600/40 border border-white/20 flex items-center justify-center text-teal-200 mb-2 shadow-inner">
-                <GraduationCap className="h-5 w-5" />
-              </div>
-              <CardTitle>Pendidikan PAUD & PNF</CardTitle>
-              <CardDescription>
-                Kolaborasi cerdas antara pendidik dan orang tua murid usia dini. Portofolio anak, pengumuman sekolah, dan modul pembelajaran keluarga.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5 text-xs text-white/85">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-teal-300" />
-                  Buku penghubung orang tua & guru digital
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-teal-300" />
-                  Agenda kegiatan dan perkembangan motorik anak
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Card 6: Sistem Keamanan & Verifikasi */}
-          <Card className="hover:scale-[1.02] transition-all duration-300">
-            <CardHeader>
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500/40 to-purple-600/40 border border-white/20 flex items-center justify-center text-violet-200 mb-2 shadow-inner">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <CardTitle>Multi-Role & Privasi Terjamin</CardTitle>
-              <CardDescription>
-                Arsitektur hak akses multi-peran dengan enkripsi data kependudukan. Satu akun dapat berpindah peran sesuai penugasan di masyarakat.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5 text-xs text-white/85">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-violet-300" />
-                  Switch Role instan dari navbar tanpa login ulang
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-violet-300" />
-                  Perlindungan privasi dan keamanan data kependudukan
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Interactive Multi-Role Simulator Section */}
-      <section id="multi-role" className="py-16 md:py-24 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <Badge variant="outline" className="text-xs px-3 py-1 mb-3 border-white/30 bg-white/10 text-white">
-            Simulasi Multi-Role
-          </Badge>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Satu Akun Warga, Beragam Peran Komunitas
-          </h2>
-          <p className="mt-3 text-sm text-white/80">
-            Klik tombol peran di bawah untuk melihat bagaimana antarmuka dan hak akses berubah secara dinamis.
-          </p>
-        </div>
-
-        {/* Role Selector Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-          {(["PENDUDUK", "KETUA_RT", "POSYANDU", "PAUD"] as const).map((roleKey) => (
-            <button
-              key={roleKey}
-              onClick={() => setSelectedRole(roleKey)}
-              className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
-                selectedRole === roleKey
-                  ? "bg-white text-indigo-950 shadow-[0_0_20px_rgba(255,255,255,0.4)] scale-105"
-                  : "bg-white/10 backdrop-blur-md text-white/85 hover:bg-white/20 hover:text-white border border-white/15"
-              }`}
-            >
-              {rolesData[roleKey].title}
-            </button>
-          ))}
-        </div>
-
-        {/* Active Role Showcase Glass Card */}
-        <Card className="max-w-4xl mx-auto border-white/30 bg-white/15 backdrop-blur-xl shadow-2xl p-2 sm:p-4">
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/15 pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-xl sm:text-2xl font-black">
-                  {rolesData[selectedRole].title}
+          {/* ========================================================= */}
+          {/* BENTO BOX 2: Statistik & Pencapaian (Col Span 2)          */}
+          {/* ========================================================= */}
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  Pencapaian & Metrik Lingkungan
                 </CardTitle>
-                <Badge variant="outline" className="border-pink-300 text-pink-200 text-[10px]">
-                  {rolesData[selectedRole].badge}
+                <Badge variant="outline" className="text-[10px]">Real-time</Badge>
+              </div>
+              <CardDescription>
+                Efisiensi tata kelola wilayah dan partisipasi warga di platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/50 text-center">
+                  <div className="text-xl sm:text-2xl font-black text-primary">100%</div>
+                  <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                    Data Terverifikasi
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/50 text-center">
+                  <div className="text-xl sm:text-2xl font-black text-primary">4 Mode</div>
+                  <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                    Multi-Role Sistem
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/50 text-center">
+                  <div className="text-xl sm:text-2xl font-black text-primary">15+</div>
+                  <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                    Layanan Publik
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/50 text-center">
+                  <div className="text-xl sm:text-2xl font-black text-primary">&lt; 5 Menit</div>
+                  <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                    Proses Surat RT
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ========================================================= */}
+          {/* BENTO BOX 3: List Layanan Komunitas / Badges (Col Span 2)  */}
+          {/* ========================================================= */}
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary" />
+                  Katalog Layanan Komunitas
+                </CardTitle>
+                <Badge variant="secondary" className="text-[10px]">Lengkap</Badge>
+              </div>
+              <CardDescription>
+                Modul terintegrasi yang dapat digunakan oleh seluruh elemen warga
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="px-2.5 py-1 text-xs bg-muted/40 gap-1.5 hover:bg-primary/10 transition-colors">
+                  <FileText className="h-3 w-3 text-primary" />
+                  Surat Pengantar RT/RW Digital
+                </Badge>
+                <Badge variant="outline" className="px-2.5 py-1 text-xs bg-muted/40 gap-1.5 hover:bg-primary/10 transition-colors">
+                  <Users className="h-3 w-3 text-primary" />
+                  Kabar Warga Bebas Hoaks
+                </Badge>
+                <Badge variant="outline" className="px-2.5 py-1 text-xs bg-muted/40 gap-1.5 hover:bg-primary/10 transition-colors">
+                  <ShoppingBag className="h-3 w-3 text-primary" />
+                  Jarimas Market (UMKM Warga)
+                </Badge>
+                <Badge variant="outline" className="px-2.5 py-1 text-xs bg-muted/40 gap-1.5 hover:bg-primary/10 transition-colors">
+                  <HeartPulse className="h-3 w-3 text-primary" />
+                  Posyandu & KIA Digital
+                </Badge>
+                <Badge variant="outline" className="px-2.5 py-1 text-xs bg-muted/40 gap-1.5 hover:bg-primary/10 transition-colors">
+                  <GraduationCap className="h-3 w-3 text-primary" />
+                  PAUD & Pendidikan Komunitas
+                </Badge>
+                <Badge variant="outline" className="px-2.5 py-1 text-xs bg-muted/40 gap-1.5 hover:bg-primary/10 transition-colors">
+                  <ShieldCheck className="h-3 w-3 text-primary" />
+                  Hak Akses Multi-Role
+                </Badge>
+                <Badge variant="outline" className="px-2.5 py-1 text-xs bg-muted/40 gap-1.5 hover:bg-primary/10 transition-colors">
+                  <Building2 className="h-3 w-3 text-primary" />
+                  Administrasi Kas & Iuran RT
                 </Badge>
               </div>
-              <CardDescription className="mt-1 text-xs sm:text-sm text-white/90">
-                {rolesData[selectedRole].desc}
+            </CardContent>
+          </Card>
+
+          {/* ========================================================= */}
+          {/* BENTO BOX 4: Visualisasi Data Singkat (Col Span 2)        */}
+          {/* ========================================================= */}
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  Ringkasan Aktivitas & Partisipasi Warga
+                </CardTitle>
+                <Badge variant="outline" className="text-[10px]">Statistik Bulanan</Badge>
+              </div>
+              <CardDescription>
+                Tingkat adopsi digital pelayanan masyarakat di lingkungan
               </CardDescription>
-            </div>
-            <Link href="/register">
-              <Button variant="glow" size="sm" className="shrink-0 text-xs">
-                Coba Mode Ini
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <h4 className="text-xs uppercase tracking-wider font-bold text-pink-200 mb-3">
-              Fitur & Kewenangan Khusus:
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {rolesData[selectedRole].features.map((feat, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15 flex items-center gap-3 text-xs font-semibold text-white"
-                >
-                  <div className="h-5 w-5 rounded-full bg-emerald-400/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0">
-                    ✓
-                  </div>
-                  <span>{feat}</span>
+            </CardHeader>
+            <CardContent className="space-y-3.5">
+              {/* Metric 1 */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span>Penerbitan Surat Pengantar Online</span>
+                  <span className="text-primary font-bold">96% Efektif</span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Security & Data Governance Section */}
-      <section id="keamanan" className="py-16 md:py-20 max-w-6xl mx-auto px-4 sm:px-6">
-        <Card className="bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl border border-white/30 overflow-hidden relative p-6 sm:p-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4 text-left">
-              <Badge variant="outline" className="border-emerald-300 text-emerald-200 bg-emerald-950/40 text-xs">
-                Keamanan & Standar Kependudukan
-              </Badge>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                Perlindungan Data Pribadi Warga Tingkat Tinggi
-              </h2>
-              <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
-                Seluruh data identitas kependudukan dan aktivitas komunitas dilindungi dengan enkripsi berbasis Row Level Security (RLS) di Supabase. Hanya pihak berwenang sesuai wilayah RT/RW yang memiliki izin akses resmi.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <span className="px-3 py-1 rounded-lg bg-white/10 text-[11px] font-semibold text-white/90 border border-white/15">
-                  🛡️ Row Level Security (RLS)
-                </span>
-                <span className="px-3 py-1 rounded-lg bg-white/10 text-[11px] font-semibold text-white/90 border border-white/15">
-                  🔐 Enkripsi SSL & Token Session
-                </span>
-                <span className="px-3 py-1 rounded-lg bg-white/10 text-[11px] font-semibold text-white/90 border border-white/15">
-                  🏛️ Kepatuhan UU Perlindungan Data Pribadi
-                </span>
+                <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: "96%" }} />
+                </div>
               </div>
-            </div>
 
-            {/* Visual Security Badge Display */}
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/20 backdrop-blur-md flex flex-col items-center justify-center text-center space-y-3">
-              <div className="h-16 w-16 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-lg shadow-emerald-500/20">
-                <ShieldCheck className="h-9 w-9" />
+              {/* Metric 2 */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span>Kehadiran Penimbangan Posyandu Balita</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">88% Rutin</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: "88%" }} />
+                </div>
               </div>
-              <h3 className="text-base font-bold text-white">Sistem Terverifikasi & Terintegrasi</h3>
-              <p className="text-xs text-white/75 max-w-sm">
-                Dirancang khusus untuk mendukung digitalisasi tata kelola komunitas di Kota Tegal dan seluruh wilayah Indonesia.
-              </p>
-            </div>
-          </div>
-        </Card>
-      </section>
 
-      {/* Call To Action Banner */}
-      <section className="py-16 md:py-24 max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <div className="p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-pink-600/30 via-purple-600/30 to-indigo-600/30 backdrop-blur-2xl border border-white/30 shadow-2xl shadow-purple-950/50 space-y-6 relative overflow-hidden">
-          <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full bg-pink-400/30 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full bg-indigo-400/30 blur-3xl pointer-events-none" />
+              {/* Metric 3 */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span>Partisipasi UMKM & Pasar Komunitas</span>
+                  <span className="text-indigo-600 dark:text-indigo-400 font-bold">120+ Produk</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: "75%" }} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
-            Wujudkan Lingkungan Warga yang Cerdas & Guyub
-          </h2>
-          <p className="text-sm sm:text-base text-white/90 max-w-xl mx-auto">
-            Bergabunglah sekarang bersama ribuan warga lainnya. Nikmati kemudahan administrasi RT/RW, informasi terpercaya, dan pasar komunitas langsung di genggaman Anda.
-          </p>
+          {/* ========================================================= */}
+          {/* BENTO BOX 5: Multi-Role Interactive Switcher (Col Span 2)  */}
+          {/* ========================================================= */}
+          <Card className="md:col-span-2 flex flex-col justify-between">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" />
+                  Simulasi Multi-Role Fleksibel
+                </CardTitle>
+                <Badge variant="outline" className="text-[10px]">1 Akun Warga</Badge>
+              </div>
+              <CardDescription>
+                Beralih mode peran seketika sesuai penugasan Anda di lingkungan
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Role Toggle Tabs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-muted/60 rounded-xl border border-border/50">
+                {(["PENDUDUK", "KETUA_RT", "POSYANDU", "PAUD"] as const).map((roleKey) => (
+                  <button
+                    key={roleKey}
+                    onClick={() => setActiveRole(roleKey)}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      activeRole === roleKey
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {roleKey === "PENDUDUK" ? "Warga" : roleKey === "KETUA_RT" ? "Ketua RT" : roleKey === "POSYANDU" ? "Posyandu" : "PAUD"}
+                  </button>
+                ))}
+              </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link href="/register" className="w-full sm:w-auto">
-              <Button
-                variant="glow"
-                size="lg"
-                className="w-full sm:w-auto px-9 text-base font-bold shadow-xl"
-              >
-                Daftarkan Diri Anda Sekarang
-              </Button>
-            </Link>
-            <Link href="/login" className="w-full sm:w-auto">
-              <Button
-                variant="glass"
-                size="lg"
-                className="w-full sm:w-auto px-8 text-base font-semibold"
-              >
-                Masuk Akun Warga
-              </Button>
-            </Link>
-          </div>
+              {/* Active Role Preview Card */}
+              <div className="p-3.5 rounded-xl border bg-muted/30 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground">
+                    {roleDetails[activeRole].title}
+                  </span>
+                  <Badge variant="outline" className={`text-[10px] ${roleDetails[activeRole].tagColor}`}>
+                    {roleDetails[activeRole].badge}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {roleDetails[activeRole].desc}
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter className="pt-2">
+              <Link href="/register" className="w-full">
+                <Button variant="secondary" className="w-full text-xs font-semibold h-9">
+                  Coba Daftar dengan Akun Warga
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
         </div>
-      </section>
 
-      {/* Minimalist Glass Footer */}
-      <footer className="border-t border-white/15 bg-black/20 backdrop-blur-lg py-8 text-center text-xs text-white/70">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Bottom Security Banner */}
+        <div className="mt-6 p-4 md:p-5 rounded-2xl bg-card border border-border/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-left">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+              <Lock className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-xs sm:text-sm font-bold text-foreground">
+                Privasi & Enkripsi Data Tingkat Tinggi
+              </div>
+              <div className="text-[11px] sm:text-xs text-muted-foreground">
+                Dilengkapi Row Level Security (RLS) Supabase dan kebijakan privasi bebas data identitas sensitif rahasia.
+              </div>
+            </div>
+          </div>
+          <Link href="/login" className="shrink-0 w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs">
+              Pelajari Akses Masuk
+            </Button>
+          </Link>
+        </div>
+      </main>
+
+      {/* Minimalist Footer */}
+      <footer className="border-t bg-card py-6 text-center text-xs text-muted-foreground mt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="bg-white/20 text-white h-6 w-6 rounded-md flex items-center justify-center text-xs font-black">
+            <div className="bg-primary text-primary-foreground h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-black">
               JM
             </div>
-            <span className="font-bold text-white">JARIMAS.ID</span>
-            <span className="text-white/50">| Jaringan Informasi Masyarakat Indonesia</span>
+            <span className="font-bold text-foreground">JARIMAS.ID</span>
+            <span>| Jaringan Informasi Masyarakat Indonesia</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-medium">
-            <Link href="/feed" className="hover:text-white transition-colors">
+            <Link href="/feed" className="hover:text-foreground transition-colors">
               Feed Warga
             </Link>
-            <Link href="/login" className="hover:text-white transition-colors">
-              Login
+            <Link href="/login" className="hover:text-foreground transition-colors">
+              Masuk
             </Link>
-            <Link href="/register" className="hover:text-white transition-colors">
-              Register
+            <Link href="/register" className="hover:text-foreground transition-colors">
+              Daftar
             </Link>
           </div>
 
-          <div className="text-white/60 text-[11px]">
+          <div className="text-[11px]">
             © {new Date().getFullYear()} JARIMAS.ID. Seluruh Hak Cipta Dilindungi.
           </div>
         </div>
