@@ -4,8 +4,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const roboto = Roboto({
-  weight: ["300", "400", "500", "700", "900"],
   subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
   variable: "--font-roboto",
 });
 
@@ -26,7 +26,7 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
