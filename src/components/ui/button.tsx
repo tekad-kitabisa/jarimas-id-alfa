@@ -3,40 +3,32 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-xl font-bold whitespace-nowrap transition-all duration-150 outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer border-3 sm:border-4 border-black shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+  "inline-flex shrink-0 items-center justify-center rounded-lg font-medium whitespace-nowrap transition-colors duration-200 outline-none select-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer",
   {
     variants: {
       variant: {
         default:
-          "bg-black text-white hover:bg-neutral-900",
-        blue:
-          "bg-blue-400 text-black hover:bg-blue-300",
-        yellow:
-          "bg-amber-300 text-black hover:bg-amber-200",
-        pink:
-          "bg-pink-400 text-black hover:bg-pink-300",
-        lime:
-          "bg-lime-400 text-black hover:bg-lime-300",
+          "bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 active:bg-indigo-800",
         outline:
-          "bg-white text-black hover:bg-neutral-50",
+          "border border-border/80 bg-background text-foreground shadow-xs hover:bg-muted/60 active:bg-muted",
         secondary:
-          "bg-blue-400 text-black hover:bg-blue-300",
+          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost:
-          "bg-transparent text-black border-transparent shadow-none hover:translate-x-0 hover:translate-y-0 hover:shadow-none hover:bg-black/10 active:translate-x-0 active:translate-y-0",
+          "text-foreground/80 hover:bg-muted hover:text-foreground",
         destructive:
-          "bg-rose-500 text-white hover:bg-rose-600",
-        link: "text-black underline-offset-4 hover:underline border-none shadow-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
+          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
+        link: "text-indigo-600 underline-offset-4 hover:underline",
       },
       size: {
         default:
-          "h-11 gap-2 px-5 text-sm md:text-base rounded-xl [&_svg:not([class*='size-'])]:size-4.5",
-        xs: "h-7 gap-1 px-2.5 text-xs rounded-lg border-2 shadow-[2px_2px_0px_0px_#000000] hover:shadow-[3px_3px_0px_0px_#000000] [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-9 gap-1.5 px-3.5 text-xs sm:text-sm rounded-lg border-3 shadow-[3px_3px_0px_0px_#000000] hover:shadow-[4px_4px_0px_0px_#000000] [&_svg:not([class*='size-'])]:size-4",
-        lg: "h-14 gap-3 px-8 text-base sm:text-lg font-black rounded-2xl border-4 shadow-[5px_5px_0px_0px_#000000] hover:shadow-[7px_7px_0px_0px_#000000] [&_svg:not([class*='size-'])]:size-5.5",
-        icon: "size-11 rounded-xl",
-        "icon-xs": "size-7 rounded-lg border-2 shadow-[2px_2px_0px_0px_#000000]",
-        "icon-sm": "size-9 rounded-lg border-3 shadow-[3px_3px_0px_0px_#000000]",
-        "icon-lg": "size-14 rounded-2xl border-4 shadow-[5px_5px_0px_0px_#000000]",
+          "h-9.5 gap-2 px-4 text-sm rounded-lg [&_svg:not([class*='size-'])]:size-4",
+        xs: "h-7 gap-1 px-2.5 text-xs rounded-md [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-8.5 gap-1.5 px-3 text-xs rounded-md [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-11 gap-2.5 px-6 text-sm font-semibold rounded-lg [&_svg:not([class*='size-'])]:size-4.5",
+        icon: "size-9.5 rounded-lg",
+        "icon-xs": "size-7 rounded-md",
+        "icon-sm": "size-8.5 rounded-md",
+        "icon-lg": "size-11 rounded-lg",
       },
     },
     defaultVariants: {
