@@ -28,7 +28,6 @@ export async function signup(formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
   const fullName = formData.get("fullName") as string
-  const nik = formData.get("nik") as string
   const isKotaTegal = formData.get("isKotaTegal") === "true"
   const kecamatanName = formData.get("kecamatanName") as string
   const kelurahanName = formData.get("kelurahanName") as string
@@ -51,11 +50,10 @@ export async function signup(formData: FormData) {
   }
 
   if (data.user) {
-    // Pembaruan detail profil warga setelah akun dibuat oleh trigger
+    // Pembaruan detail profil warga tanpa NIK
     await supabase
       .from("user_profiles")
       .update({
-        nik,
         is_kota_tegal: isKotaTegal,
         kecamatan_name: isKotaTegal ? kecamatanName : null,
         kelurahan_name: isKotaTegal ? kelurahanName : null,

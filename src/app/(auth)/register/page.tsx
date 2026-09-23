@@ -18,7 +18,6 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import {
   User,
-  CreditCard,
   Mail,
   Lock,
   MapPin,
@@ -57,7 +56,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-muted/20 py-8">
-      <div className="w-full max-w-xl space-y-6">
+      <div className="w-full max-w-lg space-y-6">
         {/* Logo & Branding */}
         <div className="flex flex-col items-center text-center space-y-2">
           <div className="bg-primary text-primary-foreground h-12 w-12 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-primary/20">
@@ -75,7 +74,7 @@ export default function RegisterPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-lg font-bold">Daftar Akun Warga Baru</CardTitle>
             <CardDescription className="text-xs">
-              Lengkapi data kependudukan Anda untuk akses ke layanan RT/RW dan informasi komunitas
+              Buat akun warga Anda untuk terhubung dengan komunitas lingkungan dan layanan publik
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -87,44 +86,25 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Data Utama */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-xs font-semibold">
-                    Nama Lengkap (Sesuai KTP)
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="fullName"
-                      name="fullName"
-                      placeholder="cth. Ahmad Hambali"
-                      required
-                      className="pl-9 h-10 text-xs"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nik" className="text-xs font-semibold">
-                    Nomor Induk Kependudukan (NIK)
-                  </Label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="nik"
-                      name="nik"
-                      placeholder="16 digit NIK"
-                      maxLength={16}
-                      required
-                      className="pl-9 h-10 text-xs"
-                      disabled={isLoading}
-                    />
-                  </div>
+              {/* Nama Lengkap */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-xs font-semibold">
+                  Nama Lengkap
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    placeholder="cth. Ahmad Hambali"
+                    required
+                    className="pl-9 h-10 text-xs"
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
 
+              {/* Email & Password */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-xs font-semibold">

@@ -423,7 +423,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-violet-300" />
-                  Perlindungan data NIK dengan standardisasi keamanan
+                  Perlindungan privasi dan keamanan data kependudukan
                 </li>
               </ul>
             </CardContent>
@@ -517,7 +517,7 @@ export default function LandingPage() {
                 Perlindungan Data Pribadi Warga Tingkat Tinggi
               </h2>
               <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
-                Seluruh data identitas kependudukan seperti NIK, Nomor KK, serta rekam medis Posyandu dilindungi dengan enkripsi berbasis Row Level Security (RLS) di Supabase. Hanya pihak berwenang sesuai wilayah RT/RW yang memiliki izin akses resmi.
+                Seluruh data identitas kependudukan dan aktivitas komunitas dilindungi dengan enkripsi berbasis Row Level Security (RLS) di Supabase. Hanya pihak berwenang sesuai wilayah RT/RW yang memiliki izin akses resmi.
               </p>
               <div className="flex flex-wrap gap-2 pt-2">
                 <span className="px-3 py-1 rounded-lg bg-white/10 text-[11px] font-semibold text-white/90 border border-white/15">
