@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { DashboardStatsResult } from "@/lib/types/dashboard"
+import { DashboardStatsResult, UserProfile } from "@/lib/types/dashboard"
 
 export async function getDashboardStats(): Promise<DashboardStatsResult> {
   try {
@@ -88,8 +88,14 @@ export async function getDashboardStats(): Promise<DashboardStatsResult> {
       .from("communities")
       .select("*", { count: "exact", head: true })
 
+    const enrichedProfile: UserProfile = {
+      ...profile,
+      provinsi_name: profile.provinsi_name || (profile.is_kota_tegal ? "Jawa Tengah" : undefined),
+      kabupaten_name: profile.kabupaten_name || (profile.is_kota_tegal ? "Kota Tegal" : undefined),
+    }
+
     return {
-      profile,
+      profile: enrichedProfile,
       stats: {
         verifiedPosts: verifiedCount || 0,
         pendingPosts: pendingCount || 0,

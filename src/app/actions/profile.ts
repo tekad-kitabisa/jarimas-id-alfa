@@ -1,29 +1,34 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ProfileQueryResult } from "@/lib/types/profile"
 
-export async function getProfile(): Promise<ProfileQueryResult> {
+export async function getProfile(): Promise<ProfileQueryResult & { user?: any }> {
   try {
     const supabase = await createClient()
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser()
 
-    if (!user) {
-      return {
-        profile: null,
-        roles: [],
-        error: "Silakan login terlebih dahulu",
-      }
+    if (authError || !user) {
+      await supabase.auth.signOut()
+      redirect("/login")
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("user_profiles")
       .select("*")
       .eq("id", user.id)
       .single()
+
+    // Jika akun di DB sudah dihapus tetapi sesi auth masih tersisa
+    if (profileError || !profile) {
+      await supabase.auth.signOut()
+      redirect("/login")
+    }
 
     const { data: roles } = await supabase
       .from("user_roles")
@@ -31,19 +36,21 @@ export async function getProfile(): Promise<ProfileQueryResult> {
       .eq("user_id", user.id)
 
     return {
-      profile: profile
-        ? { ...profile, email: user.email }
-        : {
-            id: user.id,
-            email: user.email,
-            full_name: user.user_metadata?.full_name || "Warga",
-            is_kota_tegal: true,
-            active_role: "PENDUDUK",
-            created_at: user.created_at,
-          },
+      user,
+      profile: { ...profile, email: user.email },
       roles: roles || [],
     }
   } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "digest" in err &&
+      typeof (err as any).digest === "string" &&
+      (err as any).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw err
+    }
+
     const message = err instanceof Error ? err.message : "Gagal memuat profil"
     console.error("[GET_PROFILE_ERROR]", err)
     return {

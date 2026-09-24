@@ -38,6 +38,7 @@ export async function signup(formData: FormData) {
   const email = (formData.get("email") as string)?.trim().toLowerCase()
   const password = formData.get("password") as string
   const fullName = formData.get("fullName") as string
+  const phoneNumber = (formData.get("phoneNumber") as string)?.trim()
   const isKotaTegal = formData.get("isKotaTegal") === "true"
   const kecamatanName = formData.get("kecamatanName") as string
   const kelurahanName = formData.get("kelurahanName") as string
@@ -50,6 +51,14 @@ export async function signup(formData: FormData) {
     options: {
       data: {
         full_name: fullName,
+        phone_number: phoneNumber,
+        is_kota_tegal: isKotaTegal,
+        provinsi_name: "Jawa Tengah",
+        kabupaten_name: "Kota Tegal",
+        kecamatan_name: isKotaTegal ? kecamatanName : null,
+        kelurahan_name: isKotaTegal ? kelurahanName : null,
+        rw: isKotaTegal ? rw : null,
+        rt: isKotaTegal ? rt : null,
         initial_role: "PENDUDUK",
       },
     },
@@ -60,11 +69,15 @@ export async function signup(formData: FormData) {
   }
 
   if (data.user) {
-    // Pembaruan detail profil warga
+    // Pembaruan detail profil warga di tabel user_profiles
     await supabase
       .from("user_profiles")
       .update({
+        full_name: fullName || null,
+        phone_number: phoneNumber || null,
         is_kota_tegal: isKotaTegal,
+        provinsi_name: isKotaTegal ? "Jawa Tengah" : null,
+        kabupaten_name: isKotaTegal ? "Kota Tegal" : null,
         kecamatan_name: isKotaTegal ? kecamatanName : null,
         kelurahan_name: isKotaTegal ? kelurahanName : null,
         rw: isKotaTegal ? rw : null,
@@ -76,6 +89,8 @@ export async function signup(formData: FormData) {
   revalidatePath("/", "layout")
   redirect("/dashboard")
 }
+
+export const register = signup
 
 export async function switchActiveRole(newRole: string) {
   try {

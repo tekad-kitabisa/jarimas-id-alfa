@@ -24,12 +24,22 @@ const availableRoles = [
   { id: "6", roleName: "ADMIN_OPD", label: "Admin OPD Diskominfo", level: "OPD Kota" },
 ]
 
-export function SwitchRoleDropdown() {
-  const [activeRole, setActiveRole] = React.useState(availableRoles[0])
+interface SwitchRoleDropdownProps {
+  activeRole?: string
+}
+
+export function SwitchRoleDropdown({ activeRole = "SUPER_ADMIN" }: SwitchRoleDropdownProps) {
+  const currentRole = availableRoles.find((r) => r.roleName === activeRole) || availableRoles[0]
+  const [selectedRole, setSelectedRole] = React.useState(currentRole)
   const [, startTransition] = React.useTransition()
 
+  React.useEffect(() => {
+    const found = availableRoles.find((r) => r.roleName === activeRole)
+    if (found) setSelectedRole(found)
+  }, [activeRole])
+
   const handleSelectRole = (role: typeof availableRoles[0]) => {
-    setActiveRole(role)
+    setSelectedRole(role)
     startTransition(async () => {
       await switchActiveRole(role.roleName)
     })
@@ -42,10 +52,10 @@ export function SwitchRoleDropdown() {
           <Button variant="outline" size="sm" className="gap-2 border-primary/30 bg-primary/5 hover:bg-primary/10">
             <Shield className="h-4 w-4 text-primary" />
             <span className="hidden md:inline-block text-xs font-semibold">
-              Mode: {activeRole.label}
+              Mode: {selectedRole.label}
             </span>
             <Badge variant="secondary" className="text-[10px] px-1 py-0 hidden lg:inline-block">
-              {activeRole.level}
+              {selectedRole.level}
             </Badge>
             <ChevronDown className="h-3 w-3 opacity-50" />
           </Button>
@@ -66,7 +76,7 @@ export function SwitchRoleDropdown() {
               <span className="font-medium text-foreground">{role.label}</span>
               <span className="text-[10px] text-muted-foreground">{role.level}</span>
             </div>
-            {activeRole.id === role.id && <UserCheck className="h-4 w-4 text-primary ml-2" />}
+            {selectedRole.id === role.id && <UserCheck className="h-4 w-4 text-primary ml-2" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

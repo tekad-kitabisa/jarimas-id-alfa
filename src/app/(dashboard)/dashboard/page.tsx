@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { getDashboardStats } from "@/app/actions/dashboard"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -31,6 +32,11 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   const result = await getDashboardStats()
   const profile = result?.profile
+
+  if (!profile) {
+    redirect("/login")
+  }
+
   const stats = result?.stats || {
     verifiedPosts: 0,
     pendingPosts: 0,
@@ -400,39 +406,84 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Profil Singkat Warga */}
-          <Card className="border-border/80 shadow-xs bg-muted/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-foreground">
-                Informasi Wilayah Domisili
-              </CardTitle>
+          {/* Kartu Informasi Wilayah Domisili */}
+          <Card className="border-border/80 shadow-xs">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-bold">Informasi Wilayah Domisili</CardTitle>
+              </div>
+              <Badge
+                variant={profile?.is_kota_tegal ? "default" : "outline"}
+                className={`text-[10px] font-semibold ${
+                  profile?.is_kota_tegal
+                    ? ""
+                    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                }`}
+              >
+                {profile?.is_kota_tegal ? "Warga Lokal Kota Tegal" : "Pendatang / Luar Kota"}
+              </Badge>
             </CardHeader>
-            <CardContent className="space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-border/40">
-                <span className="text-muted-foreground">Kelurahan:</span>
-                <span className="font-semibold text-foreground">
-                  {profile?.kelurahan_name || "Kota Tegal"}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border/40">
-                <span className="text-muted-foreground">Kecamatan:</span>
-                <span className="font-semibold text-foreground">
-                  {profile?.kecamatan_name || "Tegal Barat"}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border/40">
-                <span className="text-muted-foreground">Rukun Warga / Tetangga:</span>
-                <span className="font-semibold text-foreground">
-                  {profile?.rw ? `RW ${profile.rw}` : "-"} / {profile?.rt ? `RT ${profile.rt}` : "-"}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Status Verifikasi:</span>
-                <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Warga Terdata
-                </span>
-              </div>
+            <CardContent className="text-xs space-y-3">
+              {!profile?.is_kota_tegal ? (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-lg space-y-1">
+                  <p className="font-semibold text-xs">Status: Pendatang / Luar Kota Tegal</p>
+                  <p className="text-[11px] opacity-90 leading-relaxed">
+                    Akun Anda terdaftar sebagai warga di luar wilayah administratif Kota Tegal. Anda tetap dapat menggunakan layanan komunitas umum dan Jarimas Market.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg border">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
+                      Provinsi
+                    </span>
+                    <span className="font-medium text-xs text-foreground">
+                      {profile?.provinsi_name || "Jawa Tengah"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
+                      Kabupaten / Kota
+                    </span>
+                    <span className="font-medium text-xs text-foreground">
+                      {profile?.kabupaten_name || "Kota Tegal"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
+                      Kecamatan
+                    </span>
+                    <span className="font-medium text-xs text-foreground">
+                      {profile?.kecamatan_name ? `Kec. ${profile.kecamatan_name}` : "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
+                      Desa / Kelurahan
+                    </span>
+                    <span className="font-medium text-xs text-foreground">
+                      {profile?.kelurahan_name ? `Kel. ${profile.kelurahan_name}` : "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
+                      Rukun Warga (RW)
+                    </span>
+                    <span className="font-medium text-xs text-foreground">
+                      {profile?.rw ? `RW ${profile.rw}` : "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
+                      Rukun Tetangga (RT)
+                    </span>
+                    <span className="font-medium text-xs text-foreground">
+                      {profile?.rt ? `RT ${profile.rt}` : "-"}
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

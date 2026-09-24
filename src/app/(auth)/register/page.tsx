@@ -2,7 +2,21 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { signup } from "@/app/actions/auth"
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+  Phone,
+  ShoppingBag,
+  ShieldCheck,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Card,
   CardContent,
@@ -11,11 +25,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -23,261 +32,298 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { KOTA_TEGAL_DATA, RW_RT_OPTIONS } from "@/lib/constants/tegal-data"
-import {
-  User,
-  Mail,
-  Lock,
-  MapPin,
-  Building,
-  Home,
-  UserPlus,
-  Loader2,
-  AlertCircle,
-  Globe2,
-  Eye,
-  EyeOff,
-} from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { register } from "@/app/actions/auth"
+import { KOTA_TEGAL_DATA } from "@/lib/constants/tegal-data"
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = React.useState(false)
-  const [isKotaTegal, setIsKotaTegal] = React.useState(true)
-  const [selectedKecamatan, setSelectedKecamatan] = React.useState<string>("")
-  const [selectedKelurahan, setSelectedKelurahan] = React.useState<string>("")
-  const [selectedRw, setSelectedRw] = React.useState<string>("")
-  const [selectedRt, setSelectedRt] = React.useState<string>("")
+  const [isKotaTegal, setIsKotaTegal] = React.useState("true")
+  const [selectedKecamatan, setSelectedKecamatan] = React.useState("Tegal Barat")
+  const [selectedKelurahan, setSelectedKelurahan] = React.useState("Pekauman")
   const [error, setError] = React.useState<string | null>(null)
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [loading, setLoading] = React.useState(false)
 
-  // Ambil daftar kelurahan berdasarkan kecamatan yang sedang dipilih
+  // Kelurahan yang tersedia berdasarkan kecamatan yang dipilih
   const availableKelurahan = React.useMemo(() => {
-    if (!selectedKecamatan) return []
     const found = KOTA_TEGAL_DATA.find((item) => item.kecamatan === selectedKecamatan)
     return found ? found.kelurahan : []
   }, [selectedKecamatan])
 
-  // Reset kelurahan jika kecamatan berganti
-  function handleKecamatanChange(value: string | null) {
-    setSelectedKecamatan(value || "")
-    setSelectedKelurahan("")
+  // Reset kelurahan ketika kecamatan berubah
+  const handleKecamatanChange = (kecamatan: string | null) => {
+    if (!kecamatan) return
+    setSelectedKecamatan(kecamatan)
+    const found = KOTA_TEGAL_DATA.find((item) => item.kecamatan === kecamatan)
+    if (found && found.kelurahan.length > 0) {
+      setSelectedKelurahan(found.kelurahan[0])
+    }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setLoading(true)
     setError(null)
-    setIsLoading(true)
 
     const formData = new FormData(event.currentTarget)
-    formData.set("isKotaTegal", isKotaTegal ? "true" : "false")
-
-    if (isKotaTegal) {
-      if (!selectedKecamatan || !selectedKelurahan || !selectedRw || !selectedRt) {
-        setError("Harap lengkapi pilihan Kecamatan, Kelurahan, RW, dan RT.")
-        setIsLoading(false)
-        return
-      }
+    formData.set("isKotaTegal", isKotaTegal)
+    if (isKotaTegal === "true") {
       formData.set("kecamatanName", selectedKecamatan)
       formData.set("kelurahanName", selectedKelurahan)
-      formData.set("rw", selectedRw)
-      formData.set("rt", selectedRt)
     }
 
     try {
-      const result = await signup(formData)
+      const result = await register(formData)
       if (result?.error) {
         setError(result.error)
       }
     } catch {
       // Handled by Next.js navigation redirect
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/20 py-8">
-      <div className="w-full max-w-xl space-y-6">
-        {/* Logo & Header */}
-        <div className="flex flex-col items-center text-center space-y-2">
-          <div className="bg-indigo-600 text-white h-12 w-12 rounded-2xl flex items-center justify-center text-xl font-bold shadow-sm">
-            JM
+    <div className="min-h-screen lg:h-screen w-full flex flex-col lg:flex-row bg-background text-foreground overflow-x-hidden">
+      {/* ================= PANEL KIRI: BRANDING & BENEFIT (DESKTOP) ================= */}
+      <div className="lg:w-5/12 bg-primary/5 border-b lg:border-b-0 lg:border-r border-primary/10 p-6 lg:p-12 flex flex-col justify-between">
+        <div>
+          {/* Logo & Judul */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-primary text-primary-foreground h-11 w-11 rounded-xl flex items-center justify-center font-black text-xl shadow-xs">
+              JM
+            </div>
+            <div>
+              <span className="font-extrabold text-xl tracking-tight block">JARIMAS-ID</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
+                Kota Tegal
+              </span>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            JARIMAS<span className="text-indigo-600">.ID</span>
-          </h1>
-          <p className="text-xs text-muted-foreground">
-            Registrasi Akun Komunitas Warga & Pelayanan Publik
-          </p>
+
+          <div className="space-y-2 mb-8">
+            <h1 className="text-xl lg:text-2xl font-bold tracking-tight text-foreground leading-snug">
+              Registrasi Akun Komunitas Warga & Pelayanan Publik
+            </h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Bergabunglah dalam ekosistem digital terpadu untuk mengakses layanan lingkungan RT/RW,
+              UMKM lokal, dan Posyandu.
+            </p>
+          </div>
+
+          {/* Poin Keunggulan (Khusus Layanan Desktop) */}
+          <div className="hidden lg:flex flex-col space-y-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-primary/10 shadow-2xs">
+              <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-semibold">Identitas Warga Terverifikasi</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Terhubung langsung dengan struktur pengurus RT/RW domisili Anda.
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-primary/10 shadow-2xs">
+              <ShoppingBag className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-semibold">Akses Lapak UMKM Warga</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Pasarkan dan cari produk lokal sekitar dengan kontak WhatsApp langsung.
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-primary/10 shadow-2xs">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-xs font-semibold">Layanan Posyandu & PAUD</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Pantau tumbuh kembang balita dan informasi pendidikan anak usia dini.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-lg font-bold">Daftar Akun Warga Baru</CardTitle>
-            <CardDescription className="text-xs">
-              Lengkapi informasi akun dan wilayah domisili untuk terhubung dengan layanan RT/RW Anda
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
+        <div className="hidden lg:block text-[11px] text-muted-foreground pt-6 border-t border-primary/10">
+          © 2026 JARIMAS-ID Kota Tegal. Seluruh Hak Cipta Dilindungi.
+        </div>
+      </div>
 
-              {/* Nama Lengkap */}
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-xs font-semibold">
-                  Nama Lengkap
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    placeholder="cth. Ahmad Hambali"
-                    required
-                    className="pl-9 h-10 text-xs"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              {/* Email & Password */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-xs font-semibold">
-                    Alamat Email
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="nama@email.com"
-                      required
-                      className="pl-9 h-10 text-xs"
-                      disabled={isLoading}
-                    />
+      {/* ================= PANEL KANAN: FORMULIR REGISTRASI ================= */}
+      <div className="lg:w-7/12 flex items-center justify-center p-4 lg:p-8 lg:overflow-y-auto">
+        <div className="w-full max-w-xl">
+          <Card className="border-primary/10 shadow-md">
+            <CardHeader className="pb-3 text-center sm:text-left">
+              <CardTitle className="text-lg font-bold tracking-tight">
+                Buat Akun Warga Baru
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Lengkapi data diri dan alamat domisili Anda di bawah ini
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-3 text-xs">
+                {error && (
+                  <div className="p-2.5 text-xs bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
+                    {error}
                   </div>
-                </div>
+                )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-xs font-semibold">
-                    Kata Sandi
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Minimal 6 karakter"
-                      required
-                      minLength={6}
-                      className="pl-9 pr-10 h-10 text-xs"
-                      disabled={isLoading}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowPassword(!showPassword)}
-                      tabIndex={-1}
-                      disabled={isLoading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">
-                        {showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Toggle Domisili Warga */}
-              <div className="rounded-xl border border-border/70 p-4 bg-muted/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="tegal-toggle" className="text-xs font-bold cursor-pointer">
-                        Status Domisili Warga
-                      </Label>
-                      <Badge
-                        variant={isKotaTegal ? "default" : "secondary"}
-                        className="text-[10px] px-1.5 py-0"
-                      >
-                        {isKotaTegal ? "Warga Kota Tegal" : "Luar Kota Tegal"}
-                      </Badge>
+                {/* Grid 2 Kolom: Nama & Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="fullName" className="text-xs">
+                      Nama Lengkap
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        id="fullName"
+                        name="fullName"
+                        placeholder="Nama sesuai KTP"
+                        className="pl-8 h-9 text-xs"
+                        required
+                        disabled={loading}
+                      />
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {isKotaTegal
-                        ? "Pendaftaran terintegrasi dengan administrasi resmi RT/RW di Kota Tegal"
-                        : "Akun umum untuk warga di luar wilayah administratif Kota Tegal"}
-                    </p>
                   </div>
-                  <Switch
-                    id="tegal-toggle"
-                    checked={isKotaTegal}
-                    onCheckedChange={setIsKotaTegal}
-                    disabled={isLoading}
-                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="email" className="text-xs">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="nama@email.com"
+                        className="pl-8 h-9 text-xs"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Dropdown Bertingkat Kota Tegal (Kecamatan, Kelurahan, RW, RT) */}
-                {isKotaTegal ? (
-                  <div className="pt-3 border-t border-border/60 space-y-3 animate-in fade-in-50 duration-200">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {/* Dropdown Kecamatan */}
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-semibold flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                {/* Grid 2 Kolom: WhatsApp & Kata Sandi */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="phoneNumber" className="text-xs">
+                      No. WhatsApp / HP
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        placeholder="08123456789"
+                        className="pl-8 h-9 text-xs"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="password" className="text-xs">
+                      Kata Sandi
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className="pl-8 pr-9 h-9 text-xs"
+                        required
+                        minLength={6}
+                        disabled={loading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-2.5 hover:bg-transparent text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pilihan Domisili */}
+                <div className="space-y-1.5 pt-1">
+                  <Label className="text-xs font-semibold">Status Domisili Warga</Label>
+                  <RadioGroup
+                    defaultValue="true"
+                    value={isKotaTegal}
+                    onValueChange={setIsKotaTegal}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="true" id="tegal" />
+                      <Label htmlFor="tegal" className="text-xs font-normal cursor-pointer">
+                        Warga Kota Tegal
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="false" id="luar" />
+                      <Label htmlFor="luar" className="text-xs font-normal cursor-pointer">
+                        Luar Kota Tegal
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Detail Wilayah Domisili Kota Tegal */}
+                {isKotaTegal === "true" && (
+                  <div className="p-3 bg-muted/40 rounded-lg border space-y-2.5 animate-in fade-in-50 duration-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="kecamatan" className="text-[11px]">
                           Kecamatan
                         </Label>
                         <Select
                           value={selectedKecamatan}
                           onValueChange={handleKecamatanChange}
-                          disabled={isLoading}
+                          disabled={loading}
                         >
-                          <SelectTrigger className="w-full h-10 text-xs bg-background">
+                          <SelectTrigger className="h-8 text-xs bg-background">
                             <SelectValue placeholder="Pilih Kecamatan" />
                           </SelectTrigger>
                           <SelectContent>
                             {KOTA_TEGAL_DATA.map((item) => (
-                              <SelectItem key={item.kecamatan} value={item.kecamatan} className="text-xs">
+                              <SelectItem
+                                key={item.kecamatan}
+                                value={item.kecamatan}
+                                className="text-xs"
+                              >
                                 {item.kecamatan}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
-
-                      {/* Dropdown Kelurahan (Dinamis bergantung Kecamatan) */}
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-semibold flex items-center gap-1.5">
-                          <Building className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="space-y-1">
+                        <Label htmlFor="kelurahan" className="text-[11px]">
                           Kelurahan
                         </Label>
                         <Select
                           value={selectedKelurahan}
                           onValueChange={(val) => setSelectedKelurahan(val || "")}
-                          disabled={!selectedKecamatan || isLoading}
+                          disabled={loading}
                         >
-                          <SelectTrigger className="w-full h-10 text-xs bg-background">
-                            <SelectValue
-                              placeholder={
-                                selectedKecamatan
-                                  ? "Pilih Kelurahan"
-                                  : "Pilih Kecamatan Dahulu"
-                              }
-                            />
+                          <SelectTrigger className="h-8 text-xs bg-background">
+                            <SelectValue placeholder="Pilih Kelurahan" />
                           </SelectTrigger>
                           <SelectContent>
                             {availableKelurahan.map((kel) => (
@@ -289,98 +335,62 @@ export default function RegisterPage() {
                         </Select>
                       </div>
                     </div>
-
-                    {/* Dropdown RW & RT (Opsi 01 - 40) */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-semibold flex items-center gap-1.5">
-                          <Home className="h-3.5 w-3.5 text-muted-foreground" />
-                          Nomor RW
+                      <div className="space-y-1">
+                        <Label htmlFor="rw" className="text-[11px]">
+                          RW
                         </Label>
-                        <Select
-                          value={selectedRw}
-                          onValueChange={(val) => setSelectedRw(val || "")}
-                          disabled={isLoading}
-                        >
-                          <SelectTrigger className="w-full h-10 text-xs bg-background">
-                            <SelectValue placeholder="Pilih RW" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {RW_RT_OPTIONS.map((opt) => (
-                              <SelectItem key={`rw-${opt}`} value={opt} className="text-xs">
-                                RW {opt}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="rw"
+                          name="rw"
+                          placeholder="Contoh: 03"
+                          className="h-8 text-xs bg-background"
+                          required
+                          disabled={loading}
+                        />
                       </div>
-
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-semibold flex items-center gap-1.5">
-                          <Home className="h-3.5 w-3.5 text-muted-foreground" />
-                          Nomor RT
+                      <div className="space-y-1">
+                        <Label htmlFor="rt" className="text-[11px]">
+                          RT
                         </Label>
-                        <Select
-                          value={selectedRt}
-                          onValueChange={(val) => setSelectedRt(val || "")}
-                          disabled={isLoading}
-                        >
-                          <SelectTrigger className="w-full h-10 text-xs bg-background">
-                            <SelectValue placeholder="Pilih RT" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {RW_RT_OPTIONS.map((opt) => (
-                              <SelectItem key={`rt-${opt}`} value={opt} className="text-xs">
-                                RT {opt}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="rt"
+                          name="rt"
+                          placeholder="Contoh: 02"
+                          className="h-8 text-xs bg-background"
+                          required
+                          disabled={loading}
+                        />
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="p-2.5 rounded-lg bg-muted/50 border text-[11px] text-muted-foreground flex items-center gap-2">
-                    <Globe2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span>
-                      Anda mendaftar sebagai warga umum. Fitur administrasi RT/RW Kota Tegal dapat dihubungkan di kemudian hari melalui pengaturan profil.
-                    </span>
-                  </div>
                 )}
-              </div>
-            </CardContent>
-
-            <CardFooter className="flex flex-col gap-4 pt-2">
-              <Button
-                type="submit"
-                className="w-full h-10 font-semibold gap-2"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Mendaftarkan Akun Warga...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-4 w-4" />
-                    Daftar Akun Warga
-                  </>
-                )}
-              </Button>
-
-              <div className="text-center text-xs text-muted-foreground">
-                Sudah memiliki akun warga?{" "}
-                <Link
-                  href="/login"
-                  className="text-indigo-600 font-semibold hover:underline"
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-2 pt-2 pb-4">
+                <Button
+                  type="submit"
+                  className="w-full font-semibold h-9 text-xs"
+                  disabled={loading}
                 >
-                  Masuk di sini
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
-        </Card>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      Mendaftarkan Akun...
+                    </>
+                  ) : (
+                    "Daftar Akun Warga"
+                  )}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Sudah memiliki akun?{" "}
+                  <Link href="/login" className="text-primary font-semibold hover:underline">
+                    Masuk di Sini
+                  </Link>
+                </p>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
       </div>
     </div>
   )

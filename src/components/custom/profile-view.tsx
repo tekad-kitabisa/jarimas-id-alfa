@@ -143,7 +143,7 @@ export function ProfileView({ initialProfile, initialRoles }: ProfileViewProps) 
               <div className="space-y-1 mb-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                    {initialProfile?.full_name || "Warga Komunitas"}
+                    {initialProfile?.full_name || "-"}
                   </h1>
                   <Badge variant="outline" className="text-xs px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 border-emerald-300 dark:border-emerald-800 flex items-center gap-1 font-semibold">
                     <ShieldCheck className="h-3.5 w-3.5" />
@@ -154,10 +154,15 @@ export function ProfileView({ initialProfile, initialRoles }: ProfileViewProps) 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-muted-foreground/80" />
-                    <span>{initialProfile?.kelurahan_name || "Pekauman"}, {initialProfile?.kecamatan_name || "Tegal Barat"}</span>
+                    <span>
+                      {initialProfile?.kelurahan_name ? `Kel. ${initialProfile.kelurahan_name}` : "-"}
+                      {initialProfile?.kecamatan_name ? `, Kec. ${initialProfile.kecamatan_name}` : ""}
+                    </span>
                   </span>
                   <span>•</span>
-                  <span>RW {initialProfile?.rw || "03"} / RT {initialProfile?.rt || "02"}</span>
+                  <span>
+                    RW {initialProfile?.rw || "-"} / RT {initialProfile?.rt || "-"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -256,7 +261,7 @@ export function ProfileView({ initialProfile, initialRoles }: ProfileViewProps) 
                     <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
-                      value={initialProfile?.email || "warga@jarimas.tegal.id"}
+                      value={initialProfile?.email || "-"}
                       disabled
                       className="pl-9 text-xs h-9 bg-muted/50 cursor-not-allowed opacity-80"
                     />
@@ -338,7 +343,7 @@ export function ProfileView({ initialProfile, initialRoles }: ProfileViewProps) 
                         </div>
                         <div>
                           <p className="text-xs font-semibold text-foreground">
-                            {roleItem.community?.name || "Komunitas Wilayah RT 02"}
+                            {roleItem.community?.name || "Komunitas Lingkungan"}
                           </p>
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -389,19 +394,19 @@ export function ProfileView({ initialProfile, initialRoles }: ProfileViewProps) 
               <div className="space-y-2 pt-1 divide-y divide-border/40">
                 <div className="flex justify-between py-1.5">
                   <span className="text-muted-foreground">Kecamatan:</span>
-                  <span className="font-semibold text-foreground">{initialProfile?.kecamatan_name || "Tegal Barat"}</span>
+                  <span className="font-semibold text-foreground">{initialProfile?.kecamatan_name || "-"}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
                   <span className="text-muted-foreground">Kelurahan:</span>
-                  <span className="font-semibold text-foreground">{initialProfile?.kelurahan_name || "Pekauman"}</span>
+                  <span className="font-semibold text-foreground">{initialProfile?.kelurahan_name || "-"}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
                   <span className="text-muted-foreground">Rukun Warga (RW):</span>
-                  <span className="font-semibold text-foreground">RW {initialProfile?.rw || "03"}</span>
+                  <span className="font-semibold text-foreground">{initialProfile?.rw ? `RW ${initialProfile.rw}` : "-"}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
                   <span className="text-muted-foreground">Rukun Tetangga (RT):</span>
-                  <span className="font-semibold text-foreground">RT {initialProfile?.rt || "02"}</span>
+                  <span className="font-semibold text-foreground">{initialProfile?.rt ? `RT ${initialProfile.rt}` : "-"}</span>
                 </div>
               </div>
             </CardContent>

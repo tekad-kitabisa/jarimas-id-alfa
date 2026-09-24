@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { redirect } from "next/navigation"
 import { getProfile } from "@/app/actions/profile"
 import { ProfileView } from "@/components/custom/profile-view"
 
@@ -9,7 +10,13 @@ export const metadata: Metadata = {
 }
 
 export default async function ProfilePage() {
-  const { profile, roles } = await getProfile()
+  const result = await getProfile()
+  const profile = result?.profile
+  const roles = result?.roles
+
+  if (!profile) {
+    redirect("/login")
+  }
 
   return (
     <div className="py-2">

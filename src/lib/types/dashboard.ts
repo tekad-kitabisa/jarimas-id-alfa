@@ -7,6 +7,8 @@ export interface UserProfile {
   rt?: string
   active_role?: string
   is_kota_tegal?: boolean
+  provinsi_name?: string
+  kabupaten_name?: string
   avatar_url?: string
   phone_number?: string
 }

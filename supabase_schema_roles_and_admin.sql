@@ -6,9 +6,17 @@
 -- 1. Pastikan ekstensi UUID aktif
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. Pastikan tabel user_profiles memiliki kolom active_role
+-- 2. Pastikan tabel user_profiles memiliki kolom profil & wilayah lengkap
 ALTER TABLE IF EXISTS public.user_profiles 
-ADD COLUMN IF NOT EXISTS active_role TEXT DEFAULT 'PENDUDUK';
+ADD COLUMN IF NOT EXISTS active_role TEXT DEFAULT 'PENDUDUK',
+ADD COLUMN IF NOT EXISTS phone_number TEXT,
+ADD COLUMN IF NOT EXISTS is_kota_tegal BOOLEAN DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS provinsi_name TEXT DEFAULT 'Jawa Tengah',
+ADD COLUMN IF NOT EXISTS kabupaten_name TEXT DEFAULT 'Kota Tegal',
+ADD COLUMN IF NOT EXISTS kecamatan_name TEXT,
+ADD COLUMN IF NOT EXISTS kelurahan_name TEXT,
+ADD COLUMN IF NOT EXISTS rw TEXT,
+ADD COLUMN IF NOT EXISTS rt TEXT;
 
 -- 3. Buat / Perbarui tabel user_roles untuk menampung Multi-Role Pengguna
 CREATE TABLE IF NOT EXISTS public.user_roles (
@@ -86,10 +94,18 @@ WITH CHECK (public.is_super_admin(auth.uid()));
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Insert ke user_profiles
+  -- Insert ke user_profiles dengan seluruh metadata wilayah
   INSERT INTO public.user_profiles (
     id,
     full_name,
+    phone_number,
+    is_kota_tegal,
+    provinsi_name,
+    kabupaten_name,
+    kecamatan_name,
+    kelurahan_name,
+    rw,
+    rt,
     active_role,
     created_at,
     updated_at
@@ -97,11 +113,29 @@ BEGIN
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'Warga Baru'),
+    NEW.raw_user_meta_data->>'phone_number',
+    COALESCE((NEW.raw_user_meta_data->>'is_kota_tegal')::boolean, TRUE),
+    COALESCE(NEW.raw_user_meta_data->>'provinsi_name', 'Jawa Tengah'),
+    COALESCE(NEW.raw_user_meta_data->>'kabupaten_name', 'Kota Tegal'),
+    NEW.raw_user_meta_data->>'kecamatan_name',
+    NEW.raw_user_meta_data->>'kelurahan_name',
+    NEW.raw_user_meta_data->>'rw',
+    NEW.raw_user_meta_data->>'rt',
     COALESCE(NEW.raw_user_meta_data->>'initial_role', 'PENDUDUK'),
     NOW(),
     NOW()
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    phone_number = EXCLUDED.phone_number,
+    is_kota_tegal = EXCLUDED.is_kota_tegal,
+    provinsi_name = EXCLUDED.provinsi_name,
+    kabupaten_name = EXCLUDED.kabupaten_name,
+    kecamatan_name = EXCLUDED.kecamatan_name,
+    kelurahan_name = EXCLUDED.kelurahan_name,
+    rw = EXCLUDED.rw,
+    rt = EXCLUDED.rt,
+    updated_at = NOW();
 
   -- Insert default role PENDUDUK ke user_roles
   INSERT INTO public.user_roles (
