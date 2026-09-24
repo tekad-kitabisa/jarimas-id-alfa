@@ -1,9 +1,12 @@
 export type MarketplaceCategoryType = "UMKM" | "KULINER" | "BEKAS" | "JASA" | "SPM"
 
 export interface MarketplaceSeller {
-  full_name: string
+  id?: string
+  full_name?: string
   kelurahan_name?: string
   phone_number?: string
+  rw?: string
+  rt?: string
   avatar_url?: string
 }
 

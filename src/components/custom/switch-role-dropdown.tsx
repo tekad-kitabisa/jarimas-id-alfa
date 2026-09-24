@@ -12,17 +12,28 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { switchActiveRole } from "@/app/actions/auth"
 
-// Peran simulasian untuk pengujian antarmuka multi-role
 const availableRoles = [
+  { id: "0", roleName: "SUPER_ADMIN", label: "Super Admin Kota Tegal", level: "Pusat Otoritas" },
   { id: "1", roleName: "PENDUDUK", label: "Penduduk / Warga RT 02", level: "Publik" },
   { id: "2", roleName: "KETUA_RT", label: "Ketua RT 02 / RW 03", level: "Pengurus RT" },
-  { id: "3", roleName: "KADER_POSYANDU", label: "Kader Posyandu Melati", level: "Posyandu" },
-  { id: "4", roleName: "ADMIN_PAUD", label: "Operator PAUD Tunas Bangsa", level: "PAUD-PNF" },
+  { id: "3", roleName: "KETUA_RW", label: "Ketua RW 03 Pekauman", level: "Pengurus RW" },
+  { id: "4", roleName: "KADER_POSYANDU", label: "Kader Posyandu Melati", level: "Posyandu" },
+  { id: "5", roleName: "ADMIN_PAUD", label: "Operator PAUD Tunas Bangsa", level: "PAUD-PNF" },
+  { id: "6", roleName: "ADMIN_OPD", label: "Admin OPD Diskominfo", level: "OPD Kota" },
 ]
 
 export function SwitchRoleDropdown() {
   const [activeRole, setActiveRole] = React.useState(availableRoles[0])
+  const [, startTransition] = React.useTransition()
+
+  const handleSelectRole = (role: typeof availableRoles[0]) => {
+    setActiveRole(role)
+    startTransition(async () => {
+      await switchActiveRole(role.roleName)
+    })
+  }
 
   return (
     <DropdownMenu>
@@ -48,7 +59,7 @@ export function SwitchRoleDropdown() {
         {availableRoles.map((role) => (
           <DropdownMenuItem
             key={role.id}
-            onClick={() => setActiveRole(role)}
+            onClick={() => handleSelectRole(role)}
             className="flex items-center justify-between cursor-pointer text-xs py-2"
           >
             <div className="flex flex-col">

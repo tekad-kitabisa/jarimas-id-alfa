@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 }
 
 export default async function MarketplacePage() {
-  const { data: items } = await getMarketplaceItems()
+  const { data: items, currentUserId } = await getMarketplaceItems()
 
   return (
     <div className="py-2">
-      <MarketplaceView initialItems={items || []} />
+      <MarketplaceView initialItems={items || []} currentUserId={currentUserId} />
     </div>
   )
 }

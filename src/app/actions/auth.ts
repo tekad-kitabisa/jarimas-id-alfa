@@ -6,8 +6,12 @@ import { createClient } from "@/lib/supabase/server"
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
-  const email = formData.get("email") as string
+  const email = (formData.get("email") as string)?.trim().toLowerCase()
   const password = formData.get("password") as string
+
+  if (!email || !password) {
+    return { error: "Email dan kata sandi wajib diisi." }
+  }
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -15,6 +19,12 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
+    if (error.message.toLowerCase().includes("invalid login credentials")) {
+      return {
+        error:
+          "Email atau kata sandi salah. Jika baru mendaftar, pastikan email telah dikonfirmasi atau periksa kembali penulisan email dan kata sandi Anda.",
+      }
+    }
     return { error: error.message }
   }
 
@@ -25,7 +35,7 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
-  const email = formData.get("email") as string
+  const email = (formData.get("email") as string)?.trim().toLowerCase()
   const password = formData.get("password") as string
   const fullName = formData.get("fullName") as string
   const isKotaTegal = formData.get("isKotaTegal") === "true"
@@ -50,7 +60,7 @@ export async function signup(formData: FormData) {
   }
 
   if (data.user) {
-    // Pembaruan detail profil warga tanpa NIK
+    // Pembaruan detail profil warga
     await supabase
       .from("user_profiles")
       .update({
@@ -65,6 +75,29 @@ export async function signup(formData: FormData) {
 
   revalidatePath("/", "layout")
   redirect("/feed")
+}
+
+export async function switchActiveRole(newRole: string) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return { error: "Belum login" }
+
+    const { error } = await supabase
+      .from("user_profiles")
+      .update({ active_role: newRole, updated_at: new Date().toISOString() })
+      .eq("id", user.id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath("/", "layout")
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Gagal berganti peran"
+    return { error: message }
+  }
 }
 
 export async function logout() {

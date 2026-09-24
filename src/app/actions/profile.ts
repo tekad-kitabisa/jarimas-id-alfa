@@ -2,62 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { ProfileQueryResult, UserProfileData, UserRoleItem } from "@/lib/types/profile"
+import { ProfileQueryResult } from "@/lib/types/profile"
 
 export async function getProfile(): Promise<ProfileQueryResult> {
-  const defaultProfile: UserProfileData = {
-    id: "demo-user",
-    full_name: "Ahmad Maulana",
-    email: "ahmad.maulana@warga.tegal.id",
-    phone_number: "081234567890",
-    is_kota_tegal: true,
-    kecamatan_name: "Tegal Barat",
-    kelurahan_name: "Pekauman",
-    rw: "03",
-    rt: "02",
-    active_role: "PENDUDUK",
-    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-  }
-
-  const defaultRoles: UserRoleItem[] = [
-    {
-      id: "role-1",
-      user_id: "demo-user",
-      role_name: "PENDUDUK",
-      community_id: "comm-rt-02-pekauman",
-      community: {
-        name: "RT 02 / RW 03 Kelurahan Pekauman",
-        type: "RT_RW",
-      },
-      is_verified: true,
-      created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "role-2",
-      user_id: "demo-user",
-      role_name: "KADER_POSYANDU",
-      community_id: "comm-posyandu-melati",
-      community: {
-        name: "Posyandu Melati 03 Pekauman",
-        type: "POSYANDU",
-      },
-      is_verified: true,
-      created_at: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "role-3",
-      user_id: "demo-user",
-      role_name: "ADMIN_PAUD",
-      community_id: "comm-paud-tunas-bangsa",
-      community: {
-        name: "PAUD & KB Tunas Bangsa Pekauman",
-        type: "PAUD",
-      },
-      is_verified: true,
-      created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-  ]
-
   try {
     const supabase = await createClient()
     const {
@@ -65,7 +12,11 @@ export async function getProfile(): Promise<ProfileQueryResult> {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return { profile: defaultProfile, roles: defaultRoles }
+      return {
+        profile: null,
+        roles: [],
+        error: "Silakan login terlebih dahulu",
+      }
     }
 
     const { data: profile } = await supabase
@@ -82,20 +33,30 @@ export async function getProfile(): Promise<ProfileQueryResult> {
     return {
       profile: profile
         ? { ...profile, email: user.email }
-        : { ...defaultProfile, email: user.email, id: user.id },
-      roles: roles && roles.length > 0 ? roles : defaultRoles,
+        : {
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || "Warga",
+            is_kota_tegal: true,
+            active_role: "PENDUDUK",
+            created_at: user.created_at,
+          },
+      roles: roles || [],
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Gagal memuat profil"
+    console.error("[GET_PROFILE_ERROR]", err)
     return {
       error: message,
-      profile: defaultProfile,
-      roles: defaultRoles,
+      profile: null,
+      roles: [],
     }
   }
 }
 
-export async function updateProfile(formData: FormData): Promise<{ success?: boolean; error?: string }> {
+export async function updateProfile(
+  formData: FormData
+): Promise<{ success?: boolean; error?: string }> {
   try {
     const supabase = await createClient()
     const {
@@ -109,14 +70,16 @@ export async function updateProfile(formData: FormData): Promise<{ success?: boo
     const { error } = await supabase
       .from("user_profiles")
       .update({
-        full_name: fullName,
-        phone_number: phoneNumber,
+        full_name: fullName?.trim() || null,
+        phone_number: phoneNumber?.trim() || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id)
 
     if (error) return { error: error.message }
     revalidatePath("/profile")
+    revalidatePath("/feed")
+    revalidatePath("/dashboard")
     return { success: true }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Gagal memperbarui profil"

@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CommunityDetailPage({ params }: PageProps) {
   const { id } = await params
-  const { community, posts, error } = await getCommunityDetail(id)
+  const { community, posts, memberCount, error } = await getCommunityDetail(id)
 
   if (!community && error) {
     notFound()
@@ -35,7 +35,11 @@ export default async function CommunityDetailPage({ params }: PageProps) {
 
   return (
     <div className="py-2">
-      <CommunityDetailView community={community} initialPosts={posts || []} />
+      <CommunityDetailView
+        community={community}
+        initialPosts={posts || []}
+        memberCount={memberCount}
+      />
     </div>
   )
 }

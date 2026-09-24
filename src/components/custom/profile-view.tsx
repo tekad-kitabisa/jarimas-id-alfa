@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   User,
   Phone,
@@ -22,6 +23,7 @@ import {
   AlertCircle,
   Clock,
   IdCard,
+  ShieldAlert,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -65,6 +67,18 @@ export function ProfileView({ initialProfile, initialRoles }: ProfileViewProps) 
 
   const getRoleBadgeStyle = (role: string) => {
     switch (role) {
+      case "SUPER_ADMIN":
+        return {
+          label: "Super Admin",
+          badgeColor: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800",
+          icon: ShieldAlert,
+        }
+      case "KETUA_RW":
+        return {
+          label: "Ketua RW",
+          badgeColor: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800",
+          icon: Building2,
+        }
       case "KETUA_RT":
       case "PENGURUS_RT":
         return {
@@ -148,18 +162,30 @@ export function ProfileView({ initialProfile, initialRoles }: ProfileViewProps) 
               </div>
             </div>
 
-            {/* Logout Action */}
-            <form action={logout}>
-              <Button
-                type="submit"
-                variant="outline"
-                size="sm"
-                className="text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span>Keluar Akun</span>
-              </Button>
-            </form>
+            {/* Header Actions: Admin Panel & Logout */}
+            <div className="flex items-center gap-2">
+              <Link href="/admin">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 border-purple-300/60 bg-purple-500/10 text-purple-700 hover:bg-purple-500/20 dark:text-purple-300 dark:border-purple-800 font-semibold"
+                >
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                  <span>Pusat Otoritas Admin</span>
+                </Button>
+              </Link>
+              <form action={logout}>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Keluar Akun</span>
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

@@ -99,6 +99,9 @@ export function CreateListingDialog({ onItemCreated, children }: CreateListingDi
     formData.append("category", category)
     formData.append("price", price ? String(price) : "0")
     formData.append("description", description.trim())
+    if (phone.trim()) {
+      formData.append("phone", phone.trim())
+    }
     if (imageFile) {
       formData.append("image", imageFile)
     }

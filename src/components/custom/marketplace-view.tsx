@@ -3,21 +3,16 @@
 import * as React from "react"
 import {
   ShoppingBag,
-  Tag,
   Search,
   PlusCircle,
-  Sparkles,
   MapPin,
   Utensils,
   Package,
   Wrench,
   MessageCircle,
-  Phone,
   ShieldCheck,
-  Calendar,
-  X,
-  SlidersHorizontal,
   Store,
+  UserCheck,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -26,7 +21,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -38,10 +32,24 @@ import { MarketplaceItem } from "@/lib/types/marketplace"
 
 interface MarketplaceViewProps {
   initialItems: MarketplaceItem[]
+  currentUserId?: string
 }
 
-export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
+function formatWA(phone?: string, title?: string, sellerName?: string) {
+  if (!phone) return null
+  let cleaned = phone.replace(/\D/g, "")
+  if (cleaned.startsWith("0")) {
+    cleaned = "62" + cleaned.slice(1)
+  }
+  const message = encodeURIComponent(
+    `Halo Bpk/Ibu ${sellerName || "Penjual"}, saya tertarik dengan produk "${title || "Produk"}" di Jarimas Market. Apakah masih ada?`
+  )
+  return `https://wa.me/${cleaned}?text=${message}`
+}
+
+export function MarketplaceView({ initialItems, currentUserId }: MarketplaceViewProps) {
   const [items, setItems] = React.useState<MarketplaceItem[]>(initialItems)
+  const [scopeTab, setScopeTab] = React.useState<"ALL_ITEMS" | "MY_ITEMS">("ALL_ITEMS")
   const [selectedCategory, setSelectedCategory] = React.useState<string>("ALL")
   const [searchQuery, setSearchQuery] = React.useState<string>("")
   const [sortBy, setSortBy] = React.useState<"NEWEST" | "PRICE_ASC" | "PRICE_DESC">("NEWEST")
@@ -51,9 +59,16 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
     setItems((prev) => [newItem, ...prev])
   }
 
-  // Filter and sort items
+  // Filter items by Scope (All vs My Items), Category, and Search
   const filteredItems = React.useMemo(() => {
     let result = items.filter((item) => {
+      // Scope Filter (Semua Lapak vs Lapak Saya)
+      if (scopeTab === "MY_ITEMS" && currentUserId) {
+        if (item.seller_id !== currentUserId) {
+          return false
+        }
+      }
+
       // Category filter
       const matchesCategory =
         selectedCategory === "ALL" ||
@@ -70,7 +85,8 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.seller?.full_name && item.seller.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
+        (item.seller?.full_name && item.seller.full_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.seller?.kelurahan_name && item.seller.kelurahan_name.toLowerCase().includes(searchQuery.toLowerCase()))
 
       return matchesCategory && matchesSearch
     })
@@ -87,19 +103,24 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
     }
 
     return result
-  }, [items, selectedCategory, searchQuery, sortBy])
+  }, [items, scopeTab, currentUserId, selectedCategory, searchQuery, sortBy])
 
   // Category counters
   const categoryCounts = React.useMemo(() => {
+    const scoped = scopeTab === "MY_ITEMS" && currentUserId
+      ? items.filter((i) => i.seller_id === currentUserId)
+      : items
+
     return {
-      ALL: items.length,
-      UMKM: items.filter((i) => i.category === "UMKM").length,
-      KULINER: items.filter((i) => i.category === "KULINER").length,
-      BEKAS: items.filter((i) => i.category === "BEKAS").length,
-      JASA: items.filter((i) => i.category === "JASA").length,
-      SPM: items.filter((i) => i.category === "SPM").length,
+      ALL: scoped.length,
+      UMKM: scoped.filter((i) => i.category === "UMKM").length,
+      KULINER: scoped.filter((i) => i.category === "KULINER").length,
+      BEKAS: scoped.filter((i) => i.category === "BEKAS").length,
+      JASA: scoped.filter((i) => i.category === "JASA").length,
+      SPM: scoped.filter((i) => i.category === "SPM").length,
+      MY_ITEMS_TOTAL: currentUserId ? items.filter((i) => i.seller_id === currentUserId).length : 0,
     }
-  }, [items])
+  }, [items, scopeTab, currentUserId])
 
   const formatRupiah = (amount: number) => {
     if (amount === 0) return "Gratis / Program Warga"
@@ -110,16 +131,15 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
     }).format(amount)
   }
 
-  const getProductWhatsAppLink = (item: MarketplaceItem) => {
-    const rawPhone = item.seller?.phone_number || item.phone_number || "081234567890"
-    let cleanPhone = rawPhone.replace(/\D/g, "")
-    if (cleanPhone.startsWith("0")) {
-      cleanPhone = "62" + cleanPhone.slice(1)
+  const getProductLocation = (item: MarketplaceItem) => {
+    if (item.seller?.kelurahan_name) {
+      const kel = `Kel. ${item.seller.kelurahan_name}`
+      const rw = item.seller.rw ? `RW ${item.seller.rw}` : ""
+      const rt = item.seller.rt ? `RT ${item.seller.rt}` : ""
+      const parts = [kel, rw, rt].filter(Boolean)
+      return parts.join(", ")
     }
-    const message = encodeURIComponent(
-      `Halo Bpk/Ibu ${item.seller?.full_name || "Penjual"}, saya tertarik dengan produk "${item.title}" (${formatRupiah(item.price)}) di Jarimas Market. Apakah masih ada?`
-    )
-    return `https://wa.me/${cleanPhone}?text=${message}`
+    return item.location || item.kelurahan_code || "Kota Tegal"
   }
 
   return (
@@ -147,7 +167,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
             </p>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-2">
             <CreateListingDialog onItemCreated={handleItemCreated} />
           </div>
         </div>
@@ -188,6 +208,47 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
         </div>
       </div>
 
+      {/* Scope Filter: Semua Lapak vs Lapak Saya */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
+        <div className="flex items-center gap-2 bg-muted/70 p-1 rounded-xl w-fit">
+          <button
+            type="button"
+            onClick={() => setScopeTab("ALL_ITEMS")}
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              scopeTab === "ALL_ITEMS"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Store className="h-3.5 w-3.5 text-primary" />
+            <span>Semua Lapak</span>
+            <span className="text-[10px] px-1.5 py-0.2 bg-muted rounded-full text-muted-foreground font-bold">
+              {items.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setScopeTab("MY_ITEMS")}
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              scopeTab === "MY_ITEMS"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Lapak Saya</span>
+            <span className="text-[10px] px-1.5 py-0.2 bg-muted rounded-full text-muted-foreground font-bold">
+              {categoryCounts.MY_ITEMS_TOTAL}
+            </span>
+          </button>
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          Menampilkan <strong className="text-foreground">{filteredItems.length}</strong> produk di katalog
+        </div>
+      </div>
+
       {/* Filter Toolbar: Category Tabs & Live Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Category Tabs */}
@@ -200,7 +261,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
             <TabsList className="bg-muted/80 p-1 rounded-xl h-auto gap-1">
               <TabsTrigger
                 value="ALL"
-                className="text-xs px-3 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
+                className="text-xs px-3.5 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
               >
                 <span>Semua</span>
                 <span className="text-[10px] px-1.5 py-0.2 bg-muted rounded-full text-muted-foreground font-semibold">
@@ -210,7 +271,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
 
               <TabsTrigger
                 value="UMKM"
-                className="text-xs px-3 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
+                className="text-xs px-3.5 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
               >
                 <ShoppingBag className="h-3.5 w-3.5 text-blue-600" />
                 <span>UMKM</span>
@@ -218,7 +279,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
 
               <TabsTrigger
                 value="KULINER"
-                className="text-xs px-3 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
+                className="text-xs px-3.5 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
               >
                 <Utensils className="h-3.5 w-3.5 text-amber-600" />
                 <span>Kuliner</span>
@@ -226,7 +287,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
 
               <TabsTrigger
                 value="BEKAS"
-                className="text-xs px-3 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
+                className="text-xs px-3.5 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
               >
                 <Package className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Barang Bekas</span>
@@ -234,7 +295,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
 
               <TabsTrigger
                 value="JASA"
-                className="text-xs px-3 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
+                className="text-xs px-3.5 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
               >
                 <Wrench className="h-3.5 w-3.5 text-purple-600" />
                 <span>Jasa Warga</span>
@@ -242,9 +303,11 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
 
               <TabsTrigger
                 value="SPM"
-                className="text-xs px-3 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
+                className="text-xs px-3.5 py-1.5 rounded-lg data-active:bg-background data-active:text-foreground font-medium gap-1.5"
               >
-                <Sparkles className="h-3.5 w-3.5 text-rose-600" />
+                <Badge variant="outline" className="text-[9px] px-1 py-0 bg-rose-500/10 text-rose-600">
+                  SPM
+                </Badge>
                 <span>Layanan SPM</span>
               </TabsTrigger>
             </TabsList>
@@ -259,7 +322,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari barang, makanan, jasa..."
+              placeholder="Cari barang, kelurahan, penjual..."
               className="pl-9 h-9.5 text-xs bg-card border-border/80 rounded-xl"
             />
           </div>
@@ -294,9 +357,13 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
             <Search className="h-6 w-6" />
           </div>
           <div className="space-y-1 max-w-sm mx-auto">
-            <h3 className="text-base font-semibold text-foreground">Tidak ada produk ditemukan</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              {scopeTab === "MY_ITEMS" ? "Belum Ada Produk di Lapak Anda" : "Tidak ada produk ditemukan"}
+            </h3>
             <p className="text-xs text-muted-foreground">
-              Tidak ada barang atau layanan yang sesuai dengan pencarian &quot;{searchQuery}&quot; pada kategori terpilih.
+              {scopeTab === "MY_ITEMS"
+                ? "Anda belum mempublikasikan dagangan atau jasa di Jarimas Market. Pasang iklan pertama Anda sekarang!"
+                : `Tidak ada barang atau layanan yang sesuai dengan pencarian "${searchQuery}" pada kategori terpilih.`}
             </p>
           </div>
           <div className="flex items-center justify-center gap-2">
@@ -306,6 +373,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
               onClick={() => {
                 setSearchQuery("")
                 setSelectedCategory("ALL")
+                setScopeTab("ALL_ITEMS")
               }}
               className="text-xs"
             >
@@ -314,7 +382,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
             <CreateListingDialog onItemCreated={handleItemCreated}>
               <Button size="sm" className="text-xs gap-1.5">
                 <PlusCircle className="h-3.5 w-3.5" />
-                <span>Pasang Iklan Sekarang</span>
+                <span>Buka Lapak Sekarang</span>
               </Button>
             </CreateListingDialog>
           </div>
@@ -341,7 +409,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
               </DialogTitle>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5 text-muted-foreground/80" />
-                <span>{selectedProduct.location || selectedProduct.kelurahan_code || "Kota Tegal"}</span>
+                <span>{getProductLocation(selectedProduct)}</span>
               </div>
             </DialogHeader>
 
@@ -349,6 +417,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
               {/* Image Preview */}
               {selectedProduct.image_url && (
                 <div className="relative h-48 w-full rounded-xl overflow-hidden border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedProduct.image_url}
                     alt={selectedProduct.title}
@@ -378,6 +447,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
                 <span className="text-[11px] font-semibold text-muted-foreground block">Informasi Penjual</span>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10 border">
+                    <AvatarImage src={selectedProduct.seller?.avatar_url || ""} />
                     <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                       {(selectedProduct.seller?.full_name || "W")[0]}
                     </AvatarFallback>
@@ -388,7 +458,7 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
                     </p>
                     <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                       <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                      <span>Wilayah {selectedProduct.seller?.kelurahan_name || selectedProduct.kelurahan_code || "Kota Tegal"}</span>
+                      <span>{getProductLocation(selectedProduct)}</span>
                     </p>
                   </div>
                 </div>
@@ -404,19 +474,29 @@ export function MarketplaceView({ initialItems }: MarketplaceViewProps) {
               >
                 Tutup
               </Button>
-              <a
-                href={getProductWhatsAppLink(selectedProduct)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button
-                  size="sm"
-                  className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold"
+              {formatWA(
+                selectedProduct.seller?.phone_number || selectedProduct.phone_number,
+                selectedProduct.title,
+                selectedProduct.seller?.full_name
+              ) && (
+                <a
+                  href={formatWA(
+                    selectedProduct.seller?.phone_number || selectedProduct.phone_number,
+                    selectedProduct.title,
+                    selectedProduct.seller?.full_name
+                  )!}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  <span>Hubungi via WhatsApp</span>
-                </Button>
-              </a>
+                  <Button
+                    size="sm"
+                    className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Hubungi via WhatsApp</span>
+                  </Button>
+                </a>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

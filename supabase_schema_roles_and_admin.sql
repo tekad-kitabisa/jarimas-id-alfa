@@ -1,0 +1,152 @@
+-- ==============================================================================
+-- JARIMAS.ID - SKEMA DATABASE MULTI-ROLE & SUPER ADMIN INFRASTRUCTURE
+-- Jalankan skrip ini di SQL Editor Supabase Dashboard Anda.
+-- ==============================================================================
+
+-- 1. Pastikan ekstensi UUID aktif
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. Pastikan tabel user_profiles memiliki kolom active_role
+ALTER TABLE IF EXISTS public.user_profiles 
+ADD COLUMN IF NOT EXISTS active_role TEXT DEFAULT 'PENDUDUK';
+
+-- 3. Buat / Perbarui tabel user_roles untuk menampung Multi-Role Pengguna
+CREATE TABLE IF NOT EXISTS public.user_roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    community_id UUID REFERENCES public.communities(id) ON DELETE SET NULL,
+    role_name TEXT NOT NULL,
+    is_verified BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID REFERENCES auth.users(id)
+);
+
+-- Buat indeks untuk performa query relasi peran
+CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role_name ON public.user_roles(role_name);
+CREATE INDEX IF NOT EXISTS idx_user_roles_community_id ON public.user_roles(community_id);
+
+-- 4. Fungsi Helper untuk Cek Apakah Pengguna Adalah Super Admin
+CREATE OR REPLACE FUNCTION public.is_super_admin(check_user_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.user_profiles 
+    WHERE id = check_user_id AND active_role = 'SUPER_ADMIN'
+  ) OR EXISTS (
+    SELECT 1 FROM public.user_roles 
+    WHERE user_id = check_user_id AND role_name = 'SUPER_ADMIN'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5. Konfigurasi Row Level Security (RLS)
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+-- Kebijakan RLS untuk user_profiles:
+-- a) Semua orang yang login dapat membaca profil dasar warga
+DROP POLICY IF EXISTS "Semua warga terotentikasi dapat melihat user_profiles" ON public.user_profiles;
+CREATE POLICY "Semua warga terotentikasi dapat melihat user_profiles"
+ON public.user_profiles FOR SELECT
+TO authenticated
+USING (true);
+
+-- b) Pengguna dapat memperbarui profil mereka sendiri
+DROP POLICY IF EXISTS "Pengguna dapat mengedit profil sendiri" ON public.user_profiles;
+CREATE POLICY "Pengguna dapat mengedit profil sendiri"
+ON public.user_profiles FOR UPDATE
+TO authenticated
+USING (auth.uid() = id);
+
+-- c) Super Admin dapat mengedit dan memperbarui semua profil
+DROP POLICY IF EXISTS "Super Admin dapat mengubah semua profil" ON public.user_profiles;
+CREATE POLICY "Super Admin dapat mengubah semua profil"
+ON public.user_profiles FOR ALL
+TO authenticated
+USING (public.is_super_admin(auth.uid()));
+
+-- Kebijakan RLS untuk user_roles:
+-- a) Pengguna dapat melihat daftar peran milik mereka sendiri atau peran publik
+DROP POLICY IF EXISTS "Pengguna dapat melihat peran sendiri dan publik" ON public.user_roles;
+CREATE POLICY "Pengguna dapat melihat peran sendiri dan publik"
+ON public.user_roles FOR SELECT
+TO authenticated
+USING (true);
+
+-- b) Super Admin dapat menambah, mengubah, dan menghapus peran pengguna lain
+DROP POLICY IF EXISTS "Super Admin memiliki akses penuh ke user_roles" ON public.user_roles;
+CREATE POLICY "Super Admin memiliki akses penuh ke user_roles"
+ON public.user_roles FOR ALL
+TO authenticated
+USING (public.is_super_admin(auth.uid()))
+WITH CHECK (public.is_super_admin(auth.uid()));
+
+-- 6. Trigger Otomatis Pembuatan Profil saat Registrasi Akun Baru
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Insert ke user_profiles
+  INSERT INTO public.user_profiles (
+    id,
+    full_name,
+    active_role,
+    created_at,
+    updated_at
+  )
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', 'Warga Baru'),
+    COALESCE(NEW.raw_user_meta_data->>'initial_role', 'PENDUDUK'),
+    NOW(),
+    NOW()
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  -- Insert default role PENDUDUK ke user_roles
+  INSERT INTO public.user_roles (
+    user_id,
+    role_name,
+    is_verified
+  )
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'initial_role', 'PENDUDUK'),
+    TRUE
+  )
+  ON CONFLICT DO NOTHING;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Pasang trigger pada tabel auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- ==============================================================================
+-- 7. CONTOH / CARA MENJADIKAN AKUN TERTENTU SEBAGAI SUPER ADMIN PERTAMA
+-- Jalankan blok berikut untuk email target Anda:
+-- ==============================================================================
+
+-- Tetapkan peran aktif menjadi SUPER_ADMIN pada user_profiles
+UPDATE public.user_profiles
+SET active_role = 'SUPER_ADMIN'
+WHERE id IN (
+  SELECT id FROM auth.users WHERE email = 'kreasi.hambali@gmail.com'
+);
+
+-- Berikan entri SUPER_ADMIN pada tabel user_roles
+INSERT INTO public.user_roles (user_id, role_name, is_verified)
+SELECT id, 'SUPER_ADMIN', TRUE
+FROM auth.users
+WHERE email = 'kreasi.hambali@gmail.com'
+ON CONFLICT DO NOTHING;
+
+-- Verifikasi hasil:
+-- SELECT p.id, u.email, p.full_name, p.active_role 
+-- FROM public.user_profiles p 
+-- JOIN auth.users u ON p.id = u.id 
+-- WHERE u.email = 'kreasi.hambali@gmail.com';

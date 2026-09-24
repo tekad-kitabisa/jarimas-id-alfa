@@ -3,69 +3,158 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { Community, CommunityPost } from "@/lib/types/groups"
-import { DEFAULT_COMMUNITIES, DEFAULT_POSTS } from "@/lib/constants/groups-data"
 
 export async function getCommunities(): Promise<{ data: Community[]; error?: string }> {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase
+
+    // Ambil daftar komunitas beserta jumlah anggota terdaftar
+    const { data: communities, error } = await supabase
       .from("communities")
-      .select("*")
+      .select(`
+        *,
+        user_roles (count)
+      `)
       .order("created_at", { ascending: false })
 
-    if (error || !data || data.length === 0) {
-      // Jika database belum memiliki data / tabel belum ada, gunakan data representatif
-      return { data: DEFAULT_COMMUNITIES }
+    if (error) {
+      console.warn("[GET_COMMUNITIES_NESTED_WARN, FALLING BACK]", error.message)
+      // Fallback: Ambil data secara terpisah jika relasi nested count belum terindeks
+      const { data: rawComm, error: commErr } = await supabase
+        .from("communities")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+      if (commErr || !rawComm) {
+        console.error("[GET_COMMUNITIES_ERROR]", commErr)
+        return { data: [] }
+      }
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("community_id")
+
+      const formatted: Community[] = rawComm.map((comm: any) => ({
+        ...comm,
+        member_count:
+          roles?.filter((r: any) => r.community_id === comm.id).length || 0,
+      }))
+
+      return { data: formatted }
     }
 
-    return { data }
+    // Format data agar memperhitungkan jumlah anggota riil
+    const formatted: Community[] = (communities || []).map((comm: any) => ({
+      ...comm,
+      member_count: comm.user_roles?.[0]?.count || 0,
+    }))
+
+    return { data: formatted }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Gagal memuat komunitas"
-    return { error: message, data: DEFAULT_COMMUNITIES }
+    console.error("[GET_COMMUNITIES_EXCEPTION]", err)
+    return { error: message, data: [] }
   }
 }
 
 export async function getCommunityDetail(communityId: string): Promise<{
   community: Community | null
   posts: CommunityPost[]
+  memberCount: number
   error?: string
 }> {
   try {
     const supabase = await createClient()
 
+    // 1. Ambil info komunitas
     const { data: community, error: commError } = await supabase
       .from("communities")
       .select("*")
       .eq("id", communityId)
       .single()
 
-    // Ambil postingan khusus komunitas ini
-    const { data: posts } = await supabase
+    if (commError || !community) {
+      return { community: null, posts: [], memberCount: 0, error: commError?.message }
+    }
+
+    // 2. Hitung total anggota riil
+    const { count: memberCount } = await supabase
+      .from("user_roles")
+      .select("*", { count: "exact", head: true })
+      .eq("community_id", communityId)
+
+    // 3. Ambil postingan khusus komunitas ini beserta profil pembuatnya
+    const { data: posts, error: postsError } = await supabase
       .from("posts")
-      .select("*, author:user_profiles(full_name, active_role)")
+      .select(`
+        *,
+        author:user_profiles!author_id (
+          full_name,
+          kelurahan_name,
+          rw,
+          rt,
+          active_role
+        )
+      `)
       .eq("community_id", communityId)
       .order("created_at", { ascending: false })
 
-    if (commError || !community) {
-      // Fallback ke data default jika belum ada di database
-      const fallbackComm = DEFAULT_COMMUNITIES.find((c) => c.id === communityId) || null
-      const fallbackPosts = DEFAULT_POSTS[communityId] || []
-      return { community: fallbackComm, posts: fallbackPosts }
+    if (postsError) {
+      console.warn("[GET_COMMUNITY_POSTS_WARN, FALLING BACK]", postsError.message)
+      const { data: rawPosts } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("community_id", communityId)
+        .order("created_at", { ascending: false })
+
+      const authorIds = [
+        ...new Set(
+          (rawPosts || []).map((p: any) => p.author_id || p.user_id).filter(Boolean)
+        ),
+      ]
+
+      const { data: authors } = await supabase
+        .from("user_profiles")
+        .select("id, full_name, kelurahan_name, rw, rt, active_role")
+        .in("id", authorIds)
+
+      const mappedPosts: CommunityPost[] = (rawPosts || []).map((p: any) => ({
+        ...p,
+        author:
+          authors?.find((a: any) => a.id === (p.author_id || p.user_id)) || {
+            full_name: "Warga Komunitas",
+            active_role: "PENDUDUK",
+          },
+      }))
+
+      return {
+        community: {
+          ...community,
+          member_count: memberCount || 0,
+        },
+        posts: mappedPosts,
+        memberCount: memberCount || 0,
+      }
     }
 
     return {
-      community,
-      posts: posts && posts.length > 0 ? posts : (DEFAULT_POSTS[communityId] || []),
+      community: {
+        ...community,
+        member_count: memberCount || 0,
+      },
+      posts: posts || [],
+      memberCount: memberCount || 0,
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Gagal memuat detail komunitas"
-    const fallbackComm = DEFAULT_COMMUNITIES.find((c) => c.id === communityId) || null
-    const fallbackPosts = DEFAULT_POSTS[communityId] || []
-    return { error: message, community: fallbackComm, posts: fallbackPosts }
+    console.error("[GET_COMMUNITY_DETAIL_EXCEPTION]", err)
+    return { community: null, posts: [], memberCount: 0, error: message }
   }
 }
 
-export async function joinCommunity(communityId: string): Promise<{ success?: boolean; error?: string }> {
+export async function joinCommunity(
+  communityId: string
+): Promise<{ success?: boolean; error?: string }> {
   try {
     const supabase = await createClient()
     const {
@@ -76,10 +165,23 @@ export async function joinCommunity(communityId: string): Promise<{ success?: bo
       return { error: "Anda harus login terlebih dahulu" }
     }
 
+    // Periksa apakah sudah bergabung sebelumnya
+    const { data: existingRole } = await supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("community_id", communityId)
+      .single()
+
+    if (existingRole) {
+      return { success: true }
+    }
+
     const { error } = await supabase.from("user_roles").insert({
       user_id: user.id,
       community_id: communityId,
       role_name: "PENDUDUK",
+      is_verified: true,
     })
 
     if (error) {
@@ -95,7 +197,9 @@ export async function joinCommunity(communityId: string): Promise<{ success?: bo
   }
 }
 
-export async function createCommunityPost(formData: FormData): Promise<{ success?: boolean; error?: string }> {
+export async function createCommunityPost(
+  formData: FormData
+): Promise<{ success?: boolean; error?: string }> {
   try {
     const supabase = await createClient()
     const {
@@ -114,18 +218,33 @@ export async function createCommunityPost(formData: FormData): Promise<{ success
       return { error: "Konten status tidak boleh kosong." }
     }
 
+    // Coba insert dengan author_id
     const { error } = await supabase.from("posts").insert({
       community_id: communityId,
-      user_id: user.id,
+      author_id: user.id,
       content: content.trim(),
       category: category,
+      verification_status: "VERIFIED",
     })
 
     if (error) {
-      return { error: error.message }
+      // Fallback jika menggunakan user_id
+      const { error: err2 } = await supabase.from("posts").insert({
+        community_id: communityId,
+        user_id: user.id,
+        content: content.trim(),
+        category: category,
+        verification_status: "VERIFIED",
+      })
+
+      if (err2) {
+        return { error: err2.message }
+      }
     }
 
+    revalidatePath("/groups")
     revalidatePath(`/groups/${communityId}`)
+    revalidatePath("/feed")
     return { success: true }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Gagal membuat status."

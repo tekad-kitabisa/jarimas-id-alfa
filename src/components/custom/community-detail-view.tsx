@@ -29,20 +29,26 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { joinCommunity } from "@/app/actions/groups"
+import { joinCommunity, createCommunityPost } from "@/app/actions/groups"
 import { type Community, type CommunityPost } from "@/lib/types/groups"
 
 interface CommunityDetailViewProps {
   community: Community | null
   initialPosts: CommunityPost[]
+  memberCount?: number
 }
 
-export function CommunityDetailView({ community, initialPosts }: CommunityDetailViewProps) {
+export function CommunityDetailView({
+  community,
+  initialPosts,
+  memberCount,
+}: CommunityDetailViewProps) {
   const [posts, setPosts] = React.useState<CommunityPost[]>(initialPosts)
   const [newPostContent, setNewPostContent] = React.useState("")
   const [newPostCategory, setNewPostCategory] = React.useState<"DISKUSI" | "PENGUMUMAN" | "KEGIATAN">("DISKUSI")
   const [isJoined, setIsJoined] = React.useState(false)
   const [isPendingJoin, startJoinTransition] = React.useTransition()
+  const [isPendingPost, startPostTransition] = React.useTransition()
   const [joinMessage, setJoinMessage] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   const [likedPosts, setLikedPosts] = React.useState<Record<string, boolean>>({})
   const [activeTab, setActiveTab] = React.useState<"ALL" | "PENGUMUMAN" | "KEGIATAN" | "DISKUSI">("ALL")
@@ -166,11 +172,14 @@ export function CommunityDetailView({ community, initialPosts }: CommunityDetail
     e.preventDefault()
     if (!newPostContent.trim()) return
 
+    const content = newPostContent.trim()
+    const category = newPostCategory
+
     const newPost: CommunityPost = {
       id: `post-${Date.now()}`,
       community_id: community.id,
-      content: newPostContent.trim(),
-      category: newPostCategory,
+      content,
+      category,
       created_at: new Date().toISOString(),
       author: {
         full_name: "Warga Komunitas (Anda)",
@@ -182,6 +191,14 @@ export function CommunityDetailView({ community, initialPosts }: CommunityDetail
 
     setPosts([newPost, ...posts])
     setNewPostContent("")
+
+    startPostTransition(async () => {
+      const formData = new FormData()
+      formData.append("communityId", community.id)
+      formData.append("content", content)
+      formData.append("category", category)
+      await createCommunityPost(formData)
+    })
   }
 
   const filteredPosts = React.useMemo(() => {
@@ -321,7 +338,9 @@ export function CommunityDetailView({ community, initialPosts }: CommunityDetail
         <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-border/60 bg-muted/20 divide-x divide-border/60">
           <div className="p-3.5 text-center">
             <p className="text-[11px] text-muted-foreground">Total Anggota</p>
-            <p className="text-base font-bold text-foreground mt-0.5">{community.member_count || 0}</p>
+            <p className="text-base font-bold text-foreground mt-0.5">
+              {memberCount !== undefined ? memberCount : (community.member_count || 0)}
+            </p>
           </div>
           <div className="p-3.5 text-center">
             <p className="text-[11px] text-muted-foreground">Total Postingan</p>
@@ -387,11 +406,20 @@ export function CommunityDetailView({ community, initialPosts }: CommunityDetail
                   <Button
                     type="submit"
                     size="sm"
-                    disabled={!newPostContent.trim()}
+                    disabled={!newPostContent.trim() || isPendingPost}
                     className="text-xs gap-1.5 h-8 px-4"
                   >
-                    <Send className="h-3.5 w-3.5" />
-                    <span>Terbitkan Status</span>
+                    {isPendingPost ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Menerbitkan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5" />
+                        <span>Terbitkan Status</span>
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

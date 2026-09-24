@@ -35,9 +35,12 @@ import {
   Loader2,
   AlertCircle,
   Globe2,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 
 export default function RegisterPage() {
+  const [showPassword, setShowPassword] = React.useState(false)
   const [isKotaTegal, setIsKotaTegal] = React.useState(true)
   const [selectedKecamatan, setSelectedKecamatan] = React.useState<string>("")
   const [selectedKelurahan, setSelectedKelurahan] = React.useState<string>("")
@@ -170,13 +173,31 @@ export default function RegisterPage() {
                     <Input
                       id="password"
                       name="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       placeholder="Minimal 6 karakter"
                       required
                       minLength={6}
-                      className="pl-9 h-10 text-xs"
+                      className="pl-9 pr-10 h-10 text-xs"
                       disabled={isLoading}
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                      <span className="sr-only">
+                        {showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                      </span>
+                    </Button>
                   </div>
                 </div>
               </div>

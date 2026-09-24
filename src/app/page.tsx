@@ -107,12 +107,12 @@ export default async function HomePage() {
 
         {/* Crisp Centered Heading */}
         <h1 className="font-semibold text-3xl sm:text-5xl md:text-6xl tracking-tight text-foreground leading-[1.15]">
-          Tata Kelola Lingkungan Warga yang Lebih Cerdas dan Terbuka
+          Jaringan Informasi Masyarakat   Perkuat Komunikasi, Membangun Komunitas Mandiri
         </h1>
 
         {/* High-Contrast Gray Subtitle */}
         <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto font-normal leading-relaxed">
-          Hubungkan warga tetangga, pengurus RT/RW, kader Posyandu, dan pendidik PAUD dalam satu platform modern yang aman, transparan, dan terverifikasi.
+          Perkuat hubungan antar tetangga, warga, pengurus RT/RW, kader Posyandu, dan pendidik PAUD dalam satu platform modern yang aman, transparan, dan terverifikasi.
         </p>
 
         {/* Call to Action Buttons */}

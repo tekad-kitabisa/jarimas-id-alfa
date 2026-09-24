@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, ShoppingBag, LayoutDashboard, Search, Bell, Sun, Moon } from "lucide-react"
+import { Home, Users, ShoppingBag, LayoutDashboard, Search, Bell, Sun, Moon, ShieldAlert } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,7 @@ export function Navbar() {
     { href: "/groups", label: "Grup Komunitas", icon: Users },
     { href: "/marketplace", label: "Jarimas Market", icon: ShoppingBag },
     { href: "/dashboard", label: "Dashboard Rekap", icon: LayoutDashboard },
+    { href: "/admin", label: "Admin Peran", icon: ShieldAlert },
   ]
 
   return (
