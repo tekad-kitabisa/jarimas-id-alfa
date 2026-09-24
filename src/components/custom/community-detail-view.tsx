@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Send,
   UserCheck,
+  UserMinus,
   Loader2,
   Calendar,
   Sparkles,
@@ -24,12 +25,15 @@ import {
   AlertCircle,
   Copy,
   Check,
+  Lock,
+  Shield,
+  LogOut,
 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { joinCommunity, createCommunityPost } from "@/app/actions/groups"
+import { joinCommunity, leaveCommunity, createCommunityPost } from "@/app/actions/groups"
 import { type Community, type CommunityPost } from "@/lib/types/groups"
 
 interface CommunityDetailViewProps {
@@ -46,13 +50,23 @@ export function CommunityDetailView({
   const [posts, setPosts] = React.useState<CommunityPost[]>(initialPosts)
   const [newPostContent, setNewPostContent] = React.useState("")
   const [newPostCategory, setNewPostCategory] = React.useState<"DISKUSI" | "PENGUMUMAN" | "KEGIATAN">("DISKUSI")
-  const [isJoined, setIsJoined] = React.useState(false)
-  const [isPendingJoin, startJoinTransition] = React.useTransition()
+  const [isJoined, setIsJoined] = React.useState(!!community?.is_joined)
+  const [currentMemberCount, setCurrentMemberCount] = React.useState(
+    memberCount !== undefined ? memberCount : community?.member_count || 0
+  )
+  const [isPendingAction, startActionTransition] = React.useTransition()
   const [isPendingPost, startPostTransition] = React.useTransition()
-  const [joinMessage, setJoinMessage] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [feedbackMessage, setFeedbackMessage] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   const [likedPosts, setLikedPosts] = React.useState<Record<string, boolean>>({})
   const [activeTab, setActiveTab] = React.useState<"ALL" | "PENGUMUMAN" | "KEGIATAN" | "DISKUSI">("ALL")
   const [copiedLink, setCopiedLink] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsJoined(!!community?.is_joined)
+    if (memberCount !== undefined) {
+      setCurrentMemberCount(memberCount)
+    }
+  }, [community?.is_joined, memberCount])
 
   if (!community) {
     return (
@@ -127,14 +141,39 @@ export function CommunityDetailView({
   const CategoryIcon = theme.icon
 
   const handleJoin = () => {
-    setJoinMessage(null)
-    startJoinTransition(async () => {
+    setFeedbackMessage(null)
+    startActionTransition(async () => {
       const res = await joinCommunity(community.id)
       if (res.error) {
-        setJoinMessage({ type: "error", text: res.error })
+        setFeedbackMessage({ type: "error", text: res.error })
       } else {
         setIsJoined(true)
-        setJoinMessage({ type: "success", text: "Selamat! Anda telah bergabung ke komunitas ini." })
+        setCurrentMemberCount((prev) => prev + 1)
+        setFeedbackMessage({
+          type: "success",
+          text: res.success || "Selamat! Anda telah resmi bergabung ke komunitas ini.",
+        })
+      }
+    })
+  }
+
+  const handleLeave = () => {
+    if (!confirm(`Apakah Anda yakin ingin keluar dari komunitas ${community.name}?`)) {
+      return
+    }
+
+    setFeedbackMessage(null)
+    startActionTransition(async () => {
+      const res = await leaveCommunity(community.id)
+      if (res.error) {
+        setFeedbackMessage({ type: "error", text: res.error })
+      } else {
+        setIsJoined(false)
+        setCurrentMemberCount((prev) => Math.max(0, prev - 1))
+        setFeedbackMessage({
+          type: "success",
+          text: res.success || "Anda telah keluar dari komunitas ini.",
+        })
       }
     })
   }
@@ -183,7 +222,7 @@ export function CommunityDetailView({
       created_at: new Date().toISOString(),
       author: {
         full_name: "Warga Komunitas (Anda)",
-        active_role: "PENDUDUK",
+        active_role: community.user_role || "ANGGOTA",
       },
       likes_count: 0,
       comments_count: 0,
@@ -197,7 +236,10 @@ export function CommunityDetailView({
       formData.append("communityId", community.id)
       formData.append("content", content)
       formData.append("category", category)
-      await createCommunityPost(formData)
+      const res = await createCommunityPost(formData)
+      if (res.error) {
+        setFeedbackMessage({ type: "error", text: res.error })
+      }
     })
   }
 
@@ -243,7 +285,13 @@ export function CommunityDetailView({
         {/* Banner Cover Pattern */}
         <div className={`h-36 sm:h-48 w-full bg-gradient-to-r ${theme.gradient} relative flex items-end p-4 sm:p-6`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_70%)]" />
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            {isJoined && (
+              <Badge className="bg-emerald-500/90 text-white backdrop-blur text-xs font-semibold px-3 py-1 border-0 shadow-xs flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Anggota Komunitas</span>
+              </Badge>
+            )}
             <Badge className="bg-background/90 text-foreground backdrop-blur text-xs font-semibold px-3 py-1 border shadow-xs">
               {theme.label}
             </Badge>
@@ -282,47 +330,71 @@ export function CommunityDetailView({
               </div>
             </div>
 
-            {/* Header Action Buttons */}
+            {/* Header Action Buttons: Gabung Komunitas / Keluar Komunitas */}
             <div className="flex items-center gap-2 pt-2 sm:pt-0">
-              <Button
-                variant={isJoined ? "secondary" : "default"}
-                size="default"
-                onClick={handleJoin}
-                disabled={isJoined || isPendingJoin}
-                className="gap-2 text-xs font-semibold"
-              >
-                {isPendingJoin ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Memproses...</span>
-                  </>
-                ) : isJoined ? (
-                  <>
-                    <UserCheck className="h-4 w-4 text-emerald-600" />
-                    <span>Sudah Bergabung</span>
-                  </>
-                ) : (
-                  <>
-                    <Users className="h-4 w-4" />
-                    <span>Bergabung ke Grup</span>
-                  </>
-                )}
-              </Button>
+              {!isJoined ? (
+                <Button
+                  variant="default"
+                  size="default"
+                  onClick={handleJoin}
+                  disabled={isPendingAction}
+                  className="gap-2 text-xs font-semibold shadow-xs"
+                >
+                  {isPendingAction ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Memproses...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="h-4 w-4" />
+                      <span>Gabung Komunitas</span>
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-700 border-emerald-300 dark:border-emerald-800 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Anggota Terdaftar</span>
+                  </Badge>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLeave}
+                    disabled={isPendingAction}
+                    className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive font-medium h-8"
+                  >
+                    {isPendingAction ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Memproses...</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserMinus className="h-3.5 w-3.5" />
+                        <span>Keluar Komunitas</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
-          {joinMessage && (
+          {feedbackMessage && (
             <div className={`mt-4 p-3 rounded-xl text-xs font-medium flex items-center gap-2 ${
-              joinMessage.type === "success"
+              feedbackMessage.type === "success"
                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
                 : "bg-destructive/10 text-destructive border border-destructive/20"
             }`}>
-              {joinMessage.type === "success" ? (
+              {feedbackMessage.type === "success" ? (
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
               ) : (
                 <AlertCircle className="h-4 w-4 shrink-0" />
               )}
-              <span>{joinMessage.text}</span>
+              <span>{feedbackMessage.text}</span>
             </div>
           )}
 
@@ -339,7 +411,7 @@ export function CommunityDetailView({
           <div className="p-3.5 text-center">
             <p className="text-[11px] text-muted-foreground">Total Anggota</p>
             <p className="text-base font-bold text-foreground mt-0.5">
-              {memberCount !== undefined ? memberCount : (community.member_count || 0)}
+              {currentMemberCount}
             </p>
           </div>
           <div className="p-3.5 text-center">
@@ -363,68 +435,104 @@ export function CommunityDetailView({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Timeline Feed */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Create Post Card */}
-          <Card className="border-border/80 shadow-xs">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                <span>Buat Kabar / Pengumuman Baru</span>
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Kirimkan informasi, agenda kegiatan, atau diskusi untuk seluruh anggota grup {community.name}.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreatePost} className="space-y-3">
-                <textarea
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder="Tuliskan kabar, pengumuman jadwal, atau info warga di sini..."
-                  rows={3}
-                  className="w-full rounded-xl border border-border/80 bg-muted/30 p-3 text-xs focus:bg-background focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none"
-                />
+          {/* Create Post Card: Bersifat Kondisional Hanya Untuk Anggota yang Sudah Bergabung */}
+          {isJoined ? (
+            <Card className="border-border/80 shadow-xs">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <span>Buat Kabar / Pengumuman Baru</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Kirimkan informasi, agenda kegiatan, atau diskusi untuk seluruh anggota grup {community.name}.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreatePost} className="space-y-3">
+                  <textarea
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    placeholder="Tuliskan kabar, pengumuman jadwal, atau info warga di sini..."
+                    rows={3}
+                    className="w-full rounded-xl border border-border/80 bg-muted/30 p-3 text-xs focus:bg-background focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none"
+                  />
 
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-muted-foreground font-medium mr-1">Kategori:</span>
-                    {(["DISKUSI", "PENGUMUMAN", "KEGIATAN"] as const).map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setNewPostCategory(cat)}
-                        className={`text-[10px] px-2 py-1 rounded-md font-medium border transition-colors cursor-pointer ${
-                          newPostCategory === cat
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-muted-foreground font-medium mr-1">Kategori:</span>
+                      {(["DISKUSI", "PENGUMUMAN", "KEGIATAN"] as const).map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setNewPostCategory(cat)}
+                          className={`text-[10px] px-2 py-1 rounded-md font-medium border transition-colors cursor-pointer ${
+                            newPostCategory === cat
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={!newPostContent.trim() || isPendingPost}
+                      className="text-xs gap-1.5 h-8 px-4 font-semibold"
+                    >
+                      {isPendingPost ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <span>Menerbitkan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-3.5 w-3.5" />
+                          <span>Terbitkan Status</span>
+                        </>
+                      )}
+                    </Button>
                   </div>
-
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={!newPostContent.trim() || isPendingPost}
-                    className="text-xs gap-1.5 h-8 px-4"
-                  >
-                    {isPendingPost ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Menerbitkan...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-3.5 w-3.5" />
-                        <span>Terbitkan Status</span>
-                      </>
-                    )}
-                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-border/80 bg-muted/20 shadow-xs overflow-hidden border-dashed">
+              <CardContent className="p-6 text-center space-y-3">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Lock className="h-5 w-5" />
                 </div>
-              </form>
-            </CardContent>
-          </Card>
+                <div className="space-y-1 max-w-md mx-auto">
+                  <h3 className="text-sm font-bold text-foreground">
+                    Khusus Anggota Komunitas
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Anda harus bergabung dengan grup <strong>{community.name}</strong> untuk dapat menerbitkan kabar, agenda kegiatan, atau berdiskusi dengan sesama warga.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleJoin}
+                  disabled={isPendingAction}
+                  size="sm"
+                  className="text-xs gap-1.5 font-semibold mt-1"
+                >
+                  {isPendingAction ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Memproses...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="h-3.5 w-3.5" />
+                      <span>Gabung Komunitas Sekarang</span>
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Timeline Feed Section Header */}
           <div className="flex items-center justify-between gap-2 pt-2">

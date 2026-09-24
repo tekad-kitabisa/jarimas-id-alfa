@@ -1,7 +1,8 @@
 export interface Community {
   id: string
   name: string
-  type: "RT_RW" | "POSYANDU" | "PAUD" | "OPD"
+  type: string
+  community_type?: string
   category_label?: string
   description?: string
   location?: string
@@ -16,6 +17,11 @@ export interface Community {
   leader_name?: string
   leader_role?: string
   is_verified?: boolean
+  is_joined?: boolean
+  is_member?: boolean
+  is_my_rt?: boolean
+  category?: string
+  user_role?: string
   created_at?: string
 }
 
@@ -24,8 +30,12 @@ export interface CommunityPost {
   community_id: string
   content: string
   created_at: string
+  user_id?: string
+  author_name?: string
+  author_avatar?: string
   category?: "PENGUMUMAN" | "KEGIATAN" | "DISKUSI"
   author?: {
+    id?: string
     full_name: string
     active_role: string
     avatar_url?: string

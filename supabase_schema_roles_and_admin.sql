@@ -82,7 +82,21 @@ ON public.user_roles FOR SELECT
 TO authenticated
 USING (true);
 
--- b) Super Admin dapat menambah, mengubah, dan menghapus peran pengguna lain
+-- b) Pengguna dapat mendaftar/bergabung ke komunitas sendiri (insert role sendiri)
+DROP POLICY IF EXISTS "Pengguna dapat mendaftar ke komunitas sendiri" ON public.user_roles;
+CREATE POLICY "Pengguna dapat mendaftar ke komunitas sendiri"
+ON public.user_roles FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+-- c) Pengguna dapat keluar dari komunitas sendiri (delete role sendiri)
+DROP POLICY IF EXISTS "Pengguna dapat menghapus peran komunitas sendiri" ON public.user_roles;
+CREATE POLICY "Pengguna dapat menghapus peran komunitas sendiri"
+ON public.user_roles FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- d) Super Admin dapat menambah, mengubah, dan menghapus semua peran pengguna lain
 DROP POLICY IF EXISTS "Super Admin memiliki akses penuh ke user_roles" ON public.user_roles;
 CREATE POLICY "Super Admin memiliki akses penuh ke user_roles"
 ON public.user_roles FOR ALL

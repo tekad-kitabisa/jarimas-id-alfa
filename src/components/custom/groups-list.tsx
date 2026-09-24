@@ -200,8 +200,8 @@ export function GroupsList({ initialCommunities }: GroupsListProps) {
           {filteredCommunities.map((comm) => (
             <GroupCard
               key={comm.id}
-              community={comm}
-              isJoined={joinedGroupIds.includes(comm.id)}
+              group={comm}
+              isJoined={joinedGroupIds.includes(comm.id) || comm.is_member || comm.is_joined}
               onJoinSuccess={handleJoinSuccess}
             />
           ))}
