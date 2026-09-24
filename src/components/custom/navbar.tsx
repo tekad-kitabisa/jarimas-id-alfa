@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, ShoppingBag, Search, Bell, Sun, Moon } from "lucide-react"
+import { Home, Users, ShoppingBag, LayoutDashboard, Search, Bell, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ export function Navbar() {
     { href: "/feed", label: "Kabar Warga", icon: Home },
     { href: "/groups", label: "Grup Komunitas", icon: Users },
     { href: "/marketplace", label: "Jarimas Market", icon: ShoppingBag },
+    { href: "/dashboard", label: "Dashboard Rekap", icon: LayoutDashboard },
   ]
 
   return (
@@ -80,12 +81,14 @@ export function Navbar() {
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
             <Bell className="h-4 w-4" />
           </Button>
-          <Avatar className="h-8 w-8 cursor-pointer border">
-            <AvatarImage src="" alt="User" />
-            <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
-              AM
-            </AvatarFallback>
-          </Avatar>
+          <Link href="/profile">
+            <Avatar className="h-8 w-8 cursor-pointer border hover:ring-2 hover:ring-primary/40 transition-all">
+              <AvatarImage src="" alt="User" />
+              <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                AM
+              </AvatarFallback>
+            </Avatar>
+          </Link>
         </div>
       </div>
     </header>

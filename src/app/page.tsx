@@ -1,17 +1,14 @@
-"use client"
-
 import * as React from "react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/server"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
   Users,
   FileText,
@@ -19,70 +16,21 @@ import {
   HeartPulse,
   GraduationCap,
   ShieldCheck,
-  ArrowRight,
   Sparkles,
   Building2,
-  Lock,
   Compass,
   CheckCircle2,
-  Sun,
-  Moon,
   ChevronRight,
   Shield,
-  Layers,
 } from "lucide-react"
-import { useTheme } from "next-themes"
+import { ThemeToggle } from "@/components/landing/theme-toggle"
+import { RoleShowcase } from "@/components/landing/role-showcase"
 
-export default function MinimalistLandingPage() {
-  const { theme, setTheme } = useTheme()
-  const [selectedRole, setSelectedRole] = React.useState<"PENDUDUK" | "KETUA_RT" | "POSYANDU" | "PAUD">("PENDUDUK")
-
-  const roles = {
-    PENDUDUK: {
-      title: "Warga & Penduduk",
-      badge: "Akses Publik",
-      desc: "Layanan surat pengantar RT/RW digital, pemantauan pengumuman lingkungan resmi bebas hoaks, serta pasar jual-beli antar-warga tetangga.",
-      features: [
-        "Pengajuan surat pengantar RT/RW online",
-        "Akses linimasa kabar warga tervalidasi",
-        "Jual beli produk lokal di Jarimas Market",
-        "Jadwal kegiatan posyandu dan kerja bakti",
-      ],
-    },
-    KETUA_RT: {
-      title: "Ketua RT / Pengurus RW",
-      badge: "Tata Kelola Wilayah",
-      desc: "Verifikasi surat pengantar warga dalam hitungan detik, pantau sensus data kependudukan real-time, dan siarkan pengumuman wilayah terpadu.",
-      features: [
-        "Persetujuan surat pengantar instan",
-        "Master data kependudukan wilayah terpusat",
-        "Siaran notifikasi darurat & agenda resmi",
-        "Pencatatan kas dan iuran RT terbuka",
-      ],
-    },
-    POSYANDU: {
-      title: "Kader Posyandu",
-      badge: "Kesehatan Komunitas",
-      desc: "Rekam digital tumbuh kembang anak, buku KIA otomatis, jadwal imunisasi, dan pemantauan status gizi ibu-anak yang terhubung ke data kependudukan.",
-      features: [
-        "Pencatatan penimbangan & pengukuran balita",
-        "Grafik KMS digital & deteksi dini stunting",
-        "Pengingat otomatis jadwal imunisasi berkala",
-        "Laporan kesehatan berkala tingkat lingkungan",
-      ],
-    },
-    PAUD: {
-      title: "Pengelola PAUD-PNF",
-      badge: "Pendidikan Dini",
-      desc: "Buku penghubung orang tua murid digital, pantau agenda pembelajaran anak usia dini, dan koordinasi pendidikan berbasis komunitas lingkungan.",
-      features: [
-        "Buku penghubung guru dan orang tua murid",
-        "Rekap kehadiran & portofolio kegiatan anak",
-        "Agenda pembelajaran PAUD terstruktur",
-        "Integrasi data pendidikan anak lingkungan",
-      ],
-    },
-  }
+export default async function HomePage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-indigo-600 selection:text-white font-sans antialiased">
@@ -123,27 +71,27 @@ export default function MinimalistLandingPage() {
 
           {/* Right Action Buttons */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8.5 w-8.5 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              title="Toggle theme"
-            >
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-xs h-8.5">
-                Masuk
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm" className="text-xs h-8.5 font-medium">
-                Daftar Warga
-              </Button>
-            </Link>
+            <ThemeToggle />
+            {user ? (
+              <Link href="/dashboard">
+                <Button size="sm" className="text-xs h-8.5 font-medium">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-xs h-8.5">
+                    Masuk
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm" className="text-xs h-8.5 font-medium">
+                    Daftar Warga
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -169,15 +117,9 @@ export default function MinimalistLandingPage() {
 
         {/* Call to Action Buttons */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link href="/register" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto gap-2 text-sm font-medium">
-              Mulai Sebagai Warga
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/login" className="w-full sm:w-auto">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm">
-              Masuk ke Portal
+          <Link href={user ? "/dashboard" : "/register"} className="w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto text-sm font-medium">
+              {user ? "Lihat Dashboard" : "Mari Bergabung"}
             </Button>
           </Link>
         </div>
@@ -383,71 +325,7 @@ export default function MinimalistLandingPage() {
       </section>
 
       {/* Interactive Multi-Role Showcase */}
-      <section id="multi-role" className="py-16 md:py-20 border-t border-border/50 bg-muted/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-8">
-          <div className="text-center space-y-2 max-w-2xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-              Satu Akun, Multi-Peran Komunitas
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Warga yang bertugas sebagai pengurus dapat beralih peran secara instan tanpa perlu membuat akun terpisah.
-            </p>
-          </div>
-
-          {/* Role Segmented Tabs */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {(["PENDUDUK", "KETUA_RT", "POSYANDU", "PAUD"] as const).map((key) => (
-              <button
-                key={key}
-                onClick={() => setSelectedRole(key)}
-                className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
-                  selectedRole === key
-                    ? "bg-background border-border text-foreground shadow-xs"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}
-              >
-                {key === "PENDUDUK" ? "Warga / Penduduk" : key === "KETUA_RT" ? "Ketua RT / RW" : key === "POSYANDU" ? "Kader Posyandu" : "Pendidik PAUD"}
-              </button>
-            ))}
-          </div>
-
-          {/* Active Role Card Preview */}
-          <Card className="max-w-3xl mx-auto bg-card">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg">{roles[selectedRole].title}</CardTitle>
-                  <Badge variant="indigo" className="text-[10px]">
-                    {roles[selectedRole].badge}
-                  </Badge>
-                </div>
-                <CardDescription className="mt-1">
-                  {roles[selectedRole].desc}
-                </CardDescription>
-              </div>
-              <Link href="/register">
-                <Button size="sm" className="text-xs shrink-0">
-                  Daftar Mode Ini
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-xs font-medium text-foreground mb-2">Kewenangan Khusus:</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {roles[selectedRole].features.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-md bg-muted/40 border border-border/50 flex items-center gap-2.5 text-xs text-muted-foreground"
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      <RoleShowcase />
 
       {/* Security & RLS Section */}
       <section id="keamanan" className="py-16 md:py-20 max-w-5xl mx-auto px-4 sm:px-6">
@@ -464,9 +342,9 @@ export default function MinimalistLandingPage() {
               Dilengkapi enkripsi Supabase Row Level Security (RLS) dan kebijakan privasi yang ketat. Seluruh riwayat surat dan data keluarga hanya dapat diakses oleh pihak berwenang sesuai domisili RT/RW resmi.
             </p>
           </div>
-          <Link href="/register" className="shrink-0 w-full sm:w-auto">
+          <Link href={user ? "/dashboard" : "/register"} className="shrink-0 w-full sm:w-auto">
             <Button size="lg" className="w-full sm:w-auto text-sm font-medium">
-              Buat Akun Sekarang
+              {user ? "Lihat Dashboard" : "Buat Akun Sekarang"}
             </Button>
           </Link>
         </div>
@@ -482,14 +360,9 @@ export default function MinimalistLandingPage() {
             Daftarkan diri Anda hari ini dan nikmati kemudahan pelayanan komunitas di lingkungan Anda.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/register" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto text-sm">
-                Daftar Akun Warga
-              </Button>
-            </Link>
-            <Link href="/login" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm">
-                Masuk ke Akun
+            <Link href={user ? "/dashboard" : "/register"} className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto text-sm font-medium">
+                {user ? "Lihat Dashboard" : "Mari Bergabung"}
               </Button>
             </Link>
           </div>
