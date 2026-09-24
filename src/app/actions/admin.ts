@@ -102,5 +102,6 @@ export async function updateUserActiveRole(userId: string, newRole: string) {
 
   revalidatePath("/admin")
   revalidatePath("/feed")
+  revalidatePath("/dashboard")
   return { success: true }
 }

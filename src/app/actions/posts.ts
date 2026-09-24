@@ -149,6 +149,7 @@ export async function createPost(
     }
 
     revalidatePath("/feed")
+    revalidatePath("/dashboard")
     return { success: true }
   } catch (err: unknown) {
     return {

@@ -3,7 +3,7 @@ import { PostCard } from "@/components/custom/post-card"
 import { CreatePostBox } from "@/components/custom/create-post-box"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, MessageSquarePlus, Newspaper, Sparkles } from "lucide-react"
+import { MapPin, Newspaper } from "lucide-react"
 
 export default async function FeedPage() {
   const { posts, userProfile } = await getPosts()

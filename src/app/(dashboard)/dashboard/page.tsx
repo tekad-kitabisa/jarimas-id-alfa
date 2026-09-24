@@ -163,7 +163,7 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-          <Link href="/feed">
+          <Link href="/groups">
             <Button
               size="sm"
               className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shrink-0"
@@ -357,19 +357,6 @@ export default async function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2.5">
-              <Link href="/feed" className="block">
-                <Button
-                  variant="outline"
-                  className="w-full justify-between text-xs h-10 border-border/80 hover:bg-muted"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" />
-                    <span>Lini Masa Kabar Warga</span>
-                  </span>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                </Button>
-              </Link>
-
               <Link href="/groups" className="block">
                 <Button
                   variant="outline"

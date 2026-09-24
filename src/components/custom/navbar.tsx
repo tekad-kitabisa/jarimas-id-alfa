@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, ShoppingBag, LayoutDashboard, Search, Bell, Sun, Moon, ShieldAlert } from "lucide-react"
+import { Users, ShoppingBag, LayoutDashboard, Search, Bell, Sun, Moon, ShieldAlert } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,6 @@ export function Navbar() {
   const { theme, setTheme } = useTheme()
 
   const navItems = [
-    { href: "/feed", label: "Kabar Warga", icon: Home },
     { href: "/groups", label: "Grup Komunitas", icon: Users },
     { href: "/marketplace", label: "Jarimas Market", icon: ShoppingBag },
     { href: "/dashboard", label: "Dashboard Rekap", icon: LayoutDashboard },
@@ -26,7 +25,7 @@ export function Navbar() {
       <div className="flex h-14 items-center justify-between max-w-7xl mx-auto gap-2 lg:gap-4">
         {/* Sisi Kiri: Logo & Search Bar */}
         <div className="flex items-center gap-3">
-          <Link href="/feed" className="flex items-center gap-2 font-bold text-lg text-primary tracking-tight">
+          <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg text-primary tracking-tight">
             <div className="bg-primary text-primary-foreground h-8 w-8 rounded-lg flex items-center justify-center text-sm font-black">
               JM
             </div>

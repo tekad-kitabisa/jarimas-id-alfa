@@ -245,6 +245,7 @@ export async function createCommunityPost(
     revalidatePath("/groups")
     revalidatePath(`/groups/${communityId}`)
     revalidatePath("/feed")
+    revalidatePath("/dashboard")
     return { success: true }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Gagal membuat status."
